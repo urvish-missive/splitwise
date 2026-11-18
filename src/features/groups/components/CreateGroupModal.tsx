@@ -130,7 +130,8 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
         isRegistered: true
       },
       ...members.map((m) => {
-        const id = m.id || generateId();
+        const phoneDigits = normalizePhone(m.phone);
+        const id = m.id || (phoneDigits ? `usr_${phoneDigits}` : generateId());
         // If they provided a phone number, auto-save to contacts for future convenience
         if (m.phone) {
           const alreadyInContacts = contacts.some((c) => isSamePhone(c.phone, m.phone));
@@ -154,6 +155,10 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
       })
     ];
 
+    const memberPhones = groupMembers
+      .map((m) => normalizePhone(m.phone))
+      .filter((p): p is string => Boolean(p));
+
     const newGroup: Group = {
       id: generateId(),
       name: data.name,
@@ -165,6 +170,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       memberIds: groupMembers.map((m) => m.id),
+      memberPhones,
       members: groupMembers
     };
 

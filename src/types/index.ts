@@ -41,6 +41,7 @@ export interface Group {
   createdAt: string;
   updatedAt: string;
   memberIds: string[];
+  memberPhones?: string[];
   members: GroupMember[];
 }
 

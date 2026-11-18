@@ -110,26 +110,27 @@ export function isSamePhone(p1?: string, p2?: string): boolean {
 }
 
 /**
- * Finds the group member matching the current user profile (by ID or phone).
+ * Finds the group member matching the current user profile (by ID, phone, or email).
  */
-export function findMemberForUser<T extends { id: string; phone?: string }>(
+export function findMemberForUser<T extends { id: string; phone?: string; email?: string }>(
   members: T[],
-  user?: { id?: string; phone?: string } | null
+  user?: { id?: string; phone?: string; email?: string } | null
 ): T | undefined {
   if (!user) return undefined;
   return members.find(
     (m) =>
       (user.id && m.id === user.id) ||
-      (user.phone && m.phone && isSamePhone(user.phone, m.phone))
+      (user.phone && m.phone && isSamePhone(user.phone, m.phone)) ||
+      (user.email && m.email && user.email.toLowerCase() === m.email.toLowerCase())
   );
 }
 
 /**
- * Checks if a user is a member of the group (by ID or phone).
+ * Checks if a user is a member of the group (by ID, phone, or email).
  */
-export function isUserInGroup<T extends { id: string; phone?: string }>(
+export function isUserInGroup<T extends { id: string; phone?: string; email?: string }>(
   members: T[],
-  user?: { id?: string; phone?: string } | null
+  user?: { id?: string; phone?: string; email?: string } | null
 ): boolean {
   return !!findMemberForUser(members, user);
 }

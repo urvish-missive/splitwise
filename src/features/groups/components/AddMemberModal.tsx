@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { addMemberToGroup } from '@/features/groups/groupsSlice';
 import { saveGroupToFirestore } from '@/features/api/firestoreService';
 import { addContact } from '@/features/contacts/contactsSlice';
-import { generateId } from '@/lib/utils';
+import { generateId, normalizePhone } from '@/lib/utils';
 import { toast } from 'sonner';
 import { UserPlus, User, Phone, BookUser } from 'lucide-react';
 
@@ -67,8 +67,11 @@ export function AddMemberModal({ group, isOpen, onClose }: AddMemberModalProps) 
       return;
     }
 
+    const phoneDigits = normalizePhone(cleanedPhone);
+    const memberId = phoneDigits ? `usr_${phoneDigits}` : generateId();
+
     const newMember = {
-      id: generateId(),
+      id: memberId,
       name: cleanedName,
       phone: cleanedPhone,
       isRegistered: false
@@ -84,16 +87,22 @@ export function AddMemberModal({ group, isOpen, onClose }: AddMemberModalProps) 
     // Also automatically add to contacts for future quick-use!
     dispatch(
       addContact({
-        id: generateId(),
+        id: memberId,
         name: cleanedName,
         phone: cleanedPhone,
         createdAt: new Date().toISOString()
       })
     );
 
+    const updatedMemberIds = Array.from(new Set([...group.memberIds, newMember.id]));
+    const updatedMemberPhones = Array.from(
+      new Set([...(group.memberPhones || []), ...(phoneDigits ? [phoneDigits] : [])])
+    );
+
     const updatedGroup: Group = {
       ...group,
-      memberIds: [...group.memberIds, newMember.id],
+      memberIds: updatedMemberIds,
+      memberPhones: updatedMemberPhones,
       members: [...group.members, newMember],
       updatedAt: new Date().toISOString()
     };

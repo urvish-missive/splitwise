@@ -112,6 +112,108 @@ export async function deleteSettlementFromFirestore(settlementId: string): Promi
 }
 
 /**
+ * Real-time subscription to all groups in Firestore
+ */
+export function subscribeToAllGroups(
+  onUpdate: (groups: Group[]) => void
+): Unsubscribe | null {
+  if (!isFirebaseConfigured || !db) return null;
+
+  try {
+    const q = collection(db, 'groups');
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const groups: Group[] = [];
+        snapshot.forEach((doc) => {
+          groups.push(doc.data() as Group);
+        });
+        groups.sort(
+          (a, b) =>
+            new Date(b.updatedAt || b.createdAt).getTime() -
+            new Date(a.updatedAt || a.createdAt).getTime()
+        );
+        onUpdate(groups);
+      },
+      (error) => {
+        console.warn('Firestore all groups subscription error:', error);
+      }
+    );
+  } catch (err) {
+    console.warn('Failed to subscribe to all groups:', err);
+    return null;
+  }
+}
+
+/**
+ * Real-time subscription to all expenses in Firestore
+ */
+export function subscribeToAllExpenses(
+  onUpdate: (expenses: Expense[]) => void
+): Unsubscribe | null {
+  if (!isFirebaseConfigured || !db) return null;
+
+  try {
+    const q = collection(db, 'expenses');
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const expenses: Expense[] = [];
+        snapshot.forEach((doc) => {
+          expenses.push(doc.data() as Expense);
+        });
+        expenses.sort(
+          (a, b) =>
+            new Date(b.date || b.createdAt).getTime() -
+            new Date(a.date || a.createdAt).getTime()
+        );
+        onUpdate(expenses);
+      },
+      (error) => {
+        console.warn('Firestore all expenses subscription error:', error);
+      }
+    );
+  } catch (err) {
+    console.warn('Failed to subscribe to all expenses:', err);
+    return null;
+  }
+}
+
+/**
+ * Real-time subscription to all settlements in Firestore
+ */
+export function subscribeToAllSettlements(
+  onUpdate: (settlements: Settlement[]) => void
+): Unsubscribe | null {
+  if (!isFirebaseConfigured || !db) return null;
+
+  try {
+    const q = collection(db, 'settlements');
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const settlements: Settlement[] = [];
+        snapshot.forEach((doc) => {
+          settlements.push(doc.data() as Settlement);
+        });
+        settlements.sort(
+          (a, b) =>
+            new Date(b.date || b.createdAt).getTime() -
+            new Date(a.date || a.createdAt).getTime()
+        );
+        onUpdate(settlements);
+      },
+      (error) => {
+        console.warn('Firestore all settlements subscription error:', error);
+      }
+    );
+  } catch (err) {
+    console.warn('Failed to subscribe to all settlements:', err);
+    return null;
+  }
+}
+
+/**
  * Real-time subscription to groups where user is a member
  */
 export function subscribeToUserGroups(

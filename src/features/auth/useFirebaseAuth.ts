@@ -4,18 +4,20 @@ import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { setUser, setLoading } from '@/features/auth/authSlice';
 import { setGroups } from '@/features/groups/groupsSlice';
+import { setExpenses, setSettlements } from '@/features/expenses/expensesSlice';
 import {
   saveUserProfileToFirestore,
-  subscribeToUserGroups
+  subscribeToAllGroups,
+  subscribeToAllExpenses,
+  subscribeToAllSettlements
 } from '@/features/api/firestoreService';
 import { UserProfile } from '@/types';
 
 export function useFirebaseAuth() {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
-  const isDemoMode = useAppSelector((state) => state.auth.isDemoMode);
 
-  // Listen to Firebase Auth state
+  // 1. Listen to Firebase Auth state
   useEffect(() => {
     if (!isFirebaseConfigured || !auth) return;
 
@@ -40,18 +42,32 @@ export function useFirebaseAuth() {
     return () => unsubscribeAuth();
   }, [dispatch]);
 
-  // Real-time Firestore sync for groups when logged into Firebase
+  // 2. Real-time Firestore sync for all groups, expenses, settlements
   useEffect(() => {
-    if (!isFirebaseConfigured || !currentUser || isDemoMode) return;
+    if (!isFirebaseConfigured) return;
 
-    const unsubscribeGroups = subscribeToUserGroups(currentUser.id, (groups) => {
-      if (groups && groups.length > 0) {
-        dispatch(setGroups(groups));
+    const unsubGroups = subscribeToAllGroups((remoteGroups) => {
+      if (remoteGroups) {
+        dispatch(setGroups(remoteGroups));
+      }
+    });
+
+    const unsubExpenses = subscribeToAllExpenses((remoteExpenses) => {
+      if (remoteExpenses) {
+        dispatch(setExpenses(remoteExpenses));
+      }
+    });
+
+    const unsubSettlements = subscribeToAllSettlements((remoteSettlements) => {
+      if (remoteSettlements) {
+        dispatch(setSettlements(remoteSettlements));
       }
     });
 
     return () => {
-      if (unsubscribeGroups) unsubscribeGroups();
+      if (unsubGroups) unsubGroups();
+      if (unsubExpenses) unsubExpenses();
+      if (unsubSettlements) unsubSettlements();
     };
-  }, [currentUser, isDemoMode, dispatch]);
+  }, [dispatch]);
 }
