@@ -10,6 +10,7 @@ import { Avatar } from '@/features/ui/Avatar';
 import { SplitSelector } from './SplitSelector';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { addExpense } from '@/features/expenses/expensesSlice';
+import { saveExpenseToFirestore } from '@/features/api/firestoreService';
 import { generateId, CATEGORY_INFO } from '@/lib/utils';
 import { Expense, ExpenseCategory, ExpenseSplit, Group, SplitType } from '@/types';
 import { toast } from 'sonner';
@@ -136,6 +137,9 @@ export function AddExpenseModal({
     };
 
     dispatch(addExpense(newExpense));
+    saveExpenseToFirestore(newExpense).catch((err) =>
+      console.warn('Saved expense locally; Firestore sync pending:', err)
+    );
     toast.success(`Expense "${newExpense.title}" added!`);
     reset();
     setSplitType('equal');

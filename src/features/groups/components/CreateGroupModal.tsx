@@ -8,6 +8,7 @@ import { Input } from '@/features/ui/Input';
 import { Select } from '@/features/ui/Select';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { addGroup } from '@/features/groups/groupsSlice';
+import { saveGroupToFirestore } from '@/features/api/firestoreService';
 import { generateId, generateInviteCode } from '@/lib/utils';
 import { CurrencyCode, Group, GroupCategory } from '@/types';
 import { toast } from 'sonner';
@@ -97,6 +98,9 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
     };
 
     dispatch(addGroup(newGroup));
+    saveGroupToFirestore(newGroup).catch((err) =>
+      console.warn('Saved group locally; Firestore sync pending:', err)
+    );
     toast.success(`Group "${newGroup.name}" created!`);
     reset();
     setMembers([]);

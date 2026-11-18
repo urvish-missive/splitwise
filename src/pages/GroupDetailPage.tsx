@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
 import { deleteGroup } from '@/features/groups/groupsSlice';
+import { setExpenses, setSettlements } from '@/features/expenses/expensesSlice';
+import {
+  deleteGroupFromFirestore,
+  subscribeToGroupExpenses,
+  subscribeToGroupSettlements
+} from '@/features/api/firestoreService';
+import { isFirebaseConfigured } from '@/lib/firebase';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { AddExpenseModal } from '@/features/expenses/components/AddExpenseModal';
 import { SettleUpModal } from '@/features/balances/components/SettleUpModal';
@@ -81,6 +88,37 @@ export function GroupDetailPage() {
     return expenseFilterCategory === 'all' || exp.category === expenseFilterCategory;
   });
 
+  // Real-time Firestore sync for expenses and settlements of this group
+  React.useEffect(() => {
+    if (!isFirebaseConfigured || !group?.id) return;
+
+    const unsubExpenses = subscribeToGroupExpenses(group.id, (remoteExpenses) => {
+      if (remoteExpenses && remoteExpenses.length > 0) {
+        // Merge remote expenses with current store
+        dispatch((dispatchThunk, getState) => {
+          const current = getState().expenses.expenses;
+          const otherGroupExpenses = current.filter((e) => e.groupId !== group.id);
+          dispatch(setExpenses([...remoteExpenses, ...otherGroupExpenses]));
+        });
+      }
+    });
+
+    const unsubSettlements = subscribeToGroupSettlements(group.id, (remoteSettlements) => {
+      if (remoteSettlements && remoteSettlements.length > 0) {
+        dispatch((dispatchThunk, getState) => {
+          const current = getState().expenses.settlements;
+          const otherSettlements = current.filter((s) => s.groupId !== group.id);
+          dispatch(setSettlements([...remoteSettlements, ...otherSettlements]));
+        });
+      }
+    });
+
+    return () => {
+      if (unsubExpenses) unsubExpenses();
+      if (unsubSettlements) unsubSettlements();
+    };
+  }, [group?.id, dispatch]);
+
   const handleDeleteGroup = () => {
     if (
       window.confirm(
@@ -88,6 +126,9 @@ export function GroupDetailPage() {
       )
     ) {
       dispatch(deleteGroup(group.id));
+      deleteGroupFromFirestore(group.id).catch((err) =>
+        console.warn('Deleted locally; Firestore delete pending:', err)
+      );
       toast.success('Group deleted');
       navigate('/');
     }

@@ -6,6 +6,7 @@ import { Avatar } from '@/features/ui/Avatar';
 import { formatCurrency, formatDate, CATEGORY_INFO } from '@/lib/utils';
 import { useAppDispatch } from '@/app/hooks';
 import { deleteExpense } from '@/features/expenses/expensesSlice';
+import { deleteExpenseFromFirestore } from '@/features/api/firestoreService';
 import { toast } from 'sonner';
 import { Trash2, Calendar, FileText } from 'lucide-react';
 
@@ -30,6 +31,9 @@ export function ExpenseDetailsModal({
   const handleDelete = () => {
     if (window.confirm(`Delete expense "${expense.title}"?`)) {
       dispatch(deleteExpense(expense.id));
+      deleteExpenseFromFirestore(expense.id).catch((err) =>
+        console.warn('Deleted locally; Firestore delete pending:', err)
+      );
       toast.success('Expense deleted');
       onClose();
     }

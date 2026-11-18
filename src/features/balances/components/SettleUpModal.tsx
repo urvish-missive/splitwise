@@ -10,6 +10,7 @@ import { Avatar } from '@/features/ui/Avatar';
 import { Group, Settlement } from '@/types';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { addSettlement } from '@/features/expenses/expensesSlice';
+import { saveSettlementToFirestore } from '@/features/api/firestoreService';
 import { generateId, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ArrowRight, CheckCircle2, DollarSign } from 'lucide-react';
@@ -98,6 +99,9 @@ export function SettleUpModal({
     };
 
     dispatch(addSettlement(newSettlement));
+    saveSettlementToFirestore(newSettlement).catch((err) =>
+      console.warn('Saved settlement locally; Firestore sync pending:', err)
+    );
     toast.success(
       `Recorded payment of ${formatCurrency(data.amount, group.currency)}!`
     );

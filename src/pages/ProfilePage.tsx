@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
-import { updateCurrency, updateName, setUser } from '@/features/auth/authSlice';
+import { updateCurrency, updateName, setUser, logout, setDemoMode } from '@/features/auth/authSlice';
 import { resetToDemoData } from '@/features/expenses/expensesSlice';
 import { setGroups } from '@/features/groups/groupsSlice';
 import { SEED_GROUPS, CURRENT_USER } from '@/lib/seedData';
@@ -9,7 +9,9 @@ import { Button } from '@/features/ui/Button';
 import { Input } from '@/features/ui/Input';
 import { Select } from '@/features/ui/Select';
 import { Avatar } from '@/features/ui/Avatar';
-import { isFirebaseConfigured } from '@/lib/firebase';
+import { AuthModal } from '@/features/auth/components/AuthModal';
+import { logoutUser } from '@/features/auth/authService';
+import { isFirebaseConfigured, auth } from '@/lib/firebase';
 import { CurrencyCode } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -20,19 +22,29 @@ import {
   Check,
   ShieldCheck,
   User,
-  Sparkles
+  LogIn,
+  LogOut,
+  Sparkles,
+  Cloud
 } from 'lucide-react';
 
 export function ProfilePage() {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
+  const isDemoMode = useAppSelector((state) => state.auth.isDemoMode);
 
   const [name, setName] = useState(currentUser?.name || '');
   const [currency, setCurrency] = useState<CurrencyCode>(
     currentUser?.defaultCurrency || 'INR'
   );
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
+
+  useEffect(() => {
+    if (currentUser?.name) setName(currentUser.name);
+    if (currentUser?.defaultCurrency) setCurrency(currentUser.defaultCurrency);
+  }, [currentUser]);
 
   useEffect(() => {
     const handleBeforeInstall = (e: any) => {
@@ -74,6 +86,13 @@ export function ProfilePage() {
     toast.success('Profile and preferences updated!');
   };
 
+  const handleSignOut = async () => {
+    await logoutUser();
+    dispatch(setUser(CURRENT_USER));
+    dispatch(setDemoMode(true));
+    toast.info('Signed out. Switched to guest mode.');
+  };
+
   const handleResetData = () => {
     if (
       window.confirm(
@@ -87,17 +106,80 @@ export function ProfilePage() {
     }
   };
 
+  const isRealUser = auth?.currentUser && !isDemoMode;
+
   return (
     <div className="min-h-screen pb-24 max-w-lg mx-auto">
       {/* Fixed Sticky Header */}
-      <header className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md px-4 py-3 border-b border-slate-200/70 shadow-2xs">
-        <h1 className="text-base font-bold text-slate-900 leading-tight">Account & Settings</h1>
-        <p className="text-[11px] text-slate-500 mt-0.5">
-          Manage your profile, currency, and PWA installation
-        </p>
+      <header className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md px-4 py-3 border-b border-slate-200/70 shadow-2xs flex items-center justify-between">
+        <div>
+          <h1 className="text-base font-bold text-slate-900 leading-tight">Account & Cloud</h1>
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            Manage your Firebase login, currency, and PWA
+          </p>
+        </div>
+
+        {isRealUser ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSignOut}
+            className="text-xs h-8 px-2.5 gap-1 text-slate-600 border-slate-200"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span>Sign Out</span>
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            onClick={() => setIsAuthOpen(true)}
+            className="text-xs h-8 px-2.5 gap-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+          >
+            <LogIn className="h-3.5 w-3.5" />
+            <span>Sign In</span>
+          </Button>
+        )}
       </header>
 
       <div className="px-4 pt-4 space-y-4">
+        {/* Firebase Account Banner */}
+        <Card className="border-slate-200/80 p-4 relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3.5">
+              <Avatar
+                name={currentUser?.name || 'User'}
+                src={currentUser?.avatarUrl}
+                size="lg"
+                className="ring-2 ring-white/30"
+              />
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-sm font-bold text-white">{currentUser?.name}</h3>
+                  <span
+                    className={`text-[9px] font-semibold px-2 py-0.2 rounded-full ${
+                      isRealUser
+                        ? 'bg-emerald-500/20 text-emerald-300'
+                        : 'bg-amber-500/20 text-amber-300'
+                    }`}
+                  >
+                    {isRealUser ? 'Cloud Connected' : 'Guest / Demo'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">{currentUser?.email}</p>
+              </div>
+            </div>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsAuthOpen(true)}
+              className="text-xs h-8 px-2.5 bg-white/10 hover:bg-white/20 text-white border-white/20"
+            >
+              {isRealUser ? 'Switch Account' : 'Sign In'}
+            </Button>
+          </div>
+        </Card>
+
         {/* PWA Mobile Installation Card */}
         <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 border-none shadow-md">
           <div className="flex items-start space-x-3.5">
@@ -108,8 +190,8 @@ export function ProfilePage() {
               <h3 className="text-sm font-bold">Install Splitwise PWA</h3>
               <p className="text-xs text-blue-100 mt-0.5">
                 {isAppInstalled
-                  ? 'App is already installed on your home screen.'
-                  : 'Install on your phone or desktop for instant offline access and native app experience.'}
+                  ? 'App is installed on your device.'
+                  : 'Install on your phone or desktop for instant offline access and native app feel.'}
               </p>
 
               {!isAppInstalled && (
@@ -128,13 +210,9 @@ export function ProfilePage() {
 
         {/* Profile Settings */}
         <Card className="border-slate-200/80 p-4 space-y-3.5">
-          <div className="flex items-center space-x-3 pb-3 border-b border-slate-100">
-            <Avatar name={name || 'User'} size="lg" />
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">{currentUser?.name}</h3>
-              <p className="text-xs text-slate-500">{currentUser?.email}</p>
-            </div>
-          </div>
+          <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+            User Preferences
+          </h4>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -177,7 +255,7 @@ export function ProfilePage() {
             <div className="flex items-center gap-2">
               <Database className="h-4 w-4 text-slate-600" />
               <h4 className="text-xs font-semibold text-slate-800 uppercase tracking-wider">
-                Backend Status
+                Firebase Backend Status
               </h4>
             </div>
             <span
@@ -187,14 +265,14 @@ export function ProfilePage() {
                   : 'bg-blue-50 text-blue-700'
               }`}
             >
-              {isFirebaseConfigured ? 'Firebase Connected' : 'Offline / Demo Mode'}
+              {isFirebaseConfigured ? 'Firebase Active' : 'Offline / Demo Mode'}
             </span>
           </div>
 
           <p className="text-xs text-slate-500 mt-2.5 leading-relaxed">
             {isFirebaseConfigured
-              ? 'Connected to Firebase Authentication and Cloud Firestore. Live sync enabled.'
-              : 'Running in high-speed local mode with localStorage persistence. To connect to your Firebase project, provide your credentials in .env.'}
+              ? 'Connected to Firebase Authentication and Cloud Firestore. Any new group, expense, or settlement is synchronized directly to your Firestore database.'
+              : 'Add your Firebase credentials to .env to enable Cloud Firestore database sync and Google Authentication.'}
           </p>
         </Card>
 
@@ -204,7 +282,7 @@ export function ProfilePage() {
             <div>
               <h4 className="text-sm font-semibold text-slate-900">Reset Demo Data</h4>
               <p className="text-xs text-slate-500 mt-0.5">
-                Restore default Goa Trip, Flat, and Dinner expenses
+                Restore sample Goa Trip, Flat, and Dinner expenses
               </p>
             </div>
             <Button
@@ -219,6 +297,8 @@ export function ProfilePage() {
           </div>
         </Card>
       </div>
+
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </div>
   );
 }

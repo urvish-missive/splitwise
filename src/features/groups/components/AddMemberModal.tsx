@@ -8,6 +8,7 @@ import { Input } from '@/features/ui/Input';
 import { Group } from '@/types';
 import { useAppDispatch } from '@/app/hooks';
 import { addMemberToGroup } from '@/features/groups/groupsSlice';
+import { saveGroupToFirestore } from '@/features/api/firestoreService';
 import { generateId } from '@/lib/utils';
 import { toast } from 'sonner';
 import { UserPlus } from 'lucide-react';
@@ -60,6 +61,16 @@ export function AddMemberModal({ group, isOpen, onClose }: AddMemberModalProps) 
         groupId: group.id,
         member: newMember
       })
+    );
+
+    const updatedGroup: Group = {
+      ...group,
+      memberIds: [...group.memberIds, newMember.id],
+      members: [...group.members, newMember],
+      updatedAt: new Date().toISOString()
+    };
+    saveGroupToFirestore(updatedGroup).catch((err) =>
+      console.warn('Updated group locally; Firestore sync pending:', err)
     );
 
     toast.success(`Added ${newMember.name} to ${group.name}!`);
