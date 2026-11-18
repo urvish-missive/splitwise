@@ -26,7 +26,8 @@ import {
   CheckCircle2,
   Trash2,
   Users,
-  Wallet
+  Copy,
+  Check
 } from 'lucide-react';
 
 export function GroupDetailPage() {
@@ -45,6 +46,7 @@ export function GroupDetailPage() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [expenseFilterCategory, setExpenseFilterCategory] = useState('all');
+  const [quickCopied, setQuickCopied] = useState(false);
 
   const group = groups.find((g) => g.id === groupId);
 
@@ -91,6 +93,18 @@ export function GroupDetailPage() {
     }
   };
 
+  const handleQuickCopyLink = async () => {
+    const inviteLink = `${window.location.origin}/join?code=${group.inviteCode}`;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setQuickCopied(true);
+      toast.success('Group invite link copied to clipboard!');
+      setTimeout(() => setQuickCopied(false), 2000);
+    } catch {
+      setIsInviteOpen(true);
+    }
+  };
+
   return (
     <div className="min-h-screen pb-24 max-w-lg mx-auto">
       {/* Fixed Sticky Navigation Top Bar */}
@@ -120,15 +134,16 @@ export function GroupDetailPage() {
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
+            {/* Prominent Share Button */}
             <Button
-              variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => setIsInviteOpen(true)}
-              className="h-8 w-8 rounded-full text-slate-600 hover:bg-slate-200/60"
-              title="Invite friends"
+              className="h-8 px-2.5 text-xs rounded-xl bg-blue-600 hover:bg-blue-700 text-white gap-1.5 font-semibold"
             >
-              <Share2 className="h-4 w-4" />
+              <Share2 className="h-3.5 w-3.5" />
+              <span>Share</span>
             </Button>
+
             <Button
               variant="ghost"
               size="icon"
@@ -215,6 +230,38 @@ export function GroupDetailPage() {
           </div>
         </Card>
 
+        {/* Quick Share Banner Card */}
+        <div className="mb-4 p-3 rounded-2xl bg-blue-50/70 border border-blue-200/70 flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0">
+              <Share2 className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Share group with friends</p>
+              <p className="text-[10px] text-slate-500">
+                Code: <span className="font-mono font-bold text-blue-700">{group.inviteCode}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleQuickCopyLink}
+              className="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1"
+            >
+              {quickCopied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+              <span>{quickCopied ? 'Copied' : 'Copy'}</span>
+            </button>
+            <Button
+              size="sm"
+              onClick={() => setIsInviteOpen(true)}
+              className="h-7 px-2.5 text-[11px] rounded-xl font-semibold"
+            >
+              Share Options
+            </Button>
+          </div>
+        </div>
+
         {/* Tabs: Expenses | Balances | Members */}
         <Tabs
           tabs={[
@@ -268,46 +315,58 @@ export function GroupDetailPage() {
 
         {/* Tab 3: Group Members */}
         {activeTab === 'members' && (
-          <Card className="border-slate-200/80">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                Group Members ({group.members.length})
-              </h4>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setIsAddMemberOpen(true)}
-                className="text-xs h-8 px-2.5"
-              >
-                <UserPlus className="h-3.5 w-3.5 mr-1" /> Add Member
-              </Button>
-            </div>
-
-            <div className="divide-y divide-slate-100 pt-1">
-              {group.members.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between py-3 first:pt-2 last:pb-1"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Avatar name={member.name} size="md" />
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">{member.name}</p>
-                      {member.email && (
-                        <p className="text-xs text-slate-500">{member.email}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {member.id === group.createdBy && (
-                    <Badge variant="outline" className="text-[10px]">
-                      Creator
-                    </Badge>
-                  )}
+          <div className="space-y-3">
+            <Card className="border-slate-200/80">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Group Members ({group.members.length})
+                </h4>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsInviteOpen(true)}
+                    className="text-xs h-8 px-2.5 border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
+                    <Share2 className="h-3.5 w-3.5 mr-1" /> Share Link
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsAddMemberOpen(true)}
+                    className="text-xs h-8 px-2.5"
+                  >
+                    <UserPlus className="h-3.5 w-3.5 mr-1" /> Add
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </Card>
+              </div>
+
+              <div className="divide-y divide-slate-100 pt-1">
+                {group.members.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between py-3 first:pt-2 last:pb-1"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Avatar name={member.name} size="md" />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{member.name}</p>
+                        {member.email && (
+                          <p className="text-xs text-slate-500">{member.email}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {member.id === group.createdBy && (
+                      <Badge variant="outline" className="text-[10px]">
+                        Creator
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
         )}
       </div>
 
