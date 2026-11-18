@@ -3,7 +3,6 @@ import { Dialog } from '@/features/ui/Dialog';
 import { Button } from '@/features/ui/Button';
 import { Input } from '@/features/ui/Input';
 import { Tabs } from '@/features/ui/Tabs';
-import { Avatar } from '@/features/ui/Avatar';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { setUser, setDemoMode } from '@/features/auth/authSlice';
 import { addContact } from '@/features/contacts/contactsSlice';
@@ -14,8 +13,8 @@ import {
 } from '@/features/auth/authService';
 import { saveUserProfileToFirestore } from '@/features/api/firestoreService';
 import { CURRENT_USER } from '@/lib/seedData';
-import { isSamePhone, normalizePhone, generateId } from '@/lib/utils';
-import { UserProfile, Contact } from '@/types';
+import { isSamePhone, normalizePhone } from '@/lib/utils';
+import { UserProfile } from '@/types';
 import { toast } from 'sonner';
 import {
   LogIn,
@@ -23,10 +22,7 @@ import {
   Lock,
   Mail,
   User,
-  Phone,
-  ArrowRight,
-  Sparkles,
-  Users
+  Phone
 } from 'lucide-react';
 
 interface AuthModalProps {
@@ -95,54 +91,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       createdAt: new Date().toISOString()
     };
 
-    // Ensure contact exists in saved contacts
-    const existingContact = contacts.find((c) => isSamePhone(c.phone, cleanPhone));
-    if (!existingContact) {
-      dispatch(
-        addContact({
-          id: finalId,
-          name: finalName,
-          phone: cleanPhone,
-          createdAt: new Date().toISOString()
-        })
-      );
-    }
-
     dispatch(setUser(userProfile));
     dispatch(setDemoMode(false));
     saveUserProfileToFirestore(userProfile).catch(() => {});
 
-    toast.success(`Logged in as ${finalName} (${cleanPhone})! Showing your personal expenses.`);
-    onClose();
-  };
-
-  // Quick 1-tap switch to a preset contact / friend
-  const handleQuickSwitch = (profile: { name: string; phone: string; id?: string }) => {
-    // Look up ID in groups
-    let memberId = profile.id;
-    if (!memberId) {
-      for (const g of groups) {
-        const found = g.members.find((m) => isSamePhone(m.phone, profile.phone));
-        if (found) {
-          memberId = found.id;
-          break;
-        }
-      }
-    }
-
-    const userProfile: UserProfile = {
-      id: memberId || `usr_${normalizePhone(profile.phone)}`,
-      name: profile.name,
-      phone: profile.phone,
-      email: `${normalizePhone(profile.phone)}@splitwise.local`,
-      defaultCurrency: 'INR',
-      createdAt: new Date().toISOString()
-    };
-
-    dispatch(setUser(userProfile));
-    dispatch(setDemoMode(false));
-    saveUserProfileToFirestore(userProfile).catch(() => {});
-    toast.success(`Logged in as ${profile.name} (${profile.phone})!`);
+    toast.success(`Logged in as ${finalName}!`);
     onClose();
   };
 
@@ -215,19 +168,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
   };
 
-  const handleGuestDemo = () => {
-    dispatch(setUser(CURRENT_USER));
-    dispatch(setDemoMode(true));
-    toast.info('Logged in as Alex Rivers (Guest / Demo Mode).');
-    onClose();
-  };
-
   return (
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title="Sign In / Switch Account"
-      description="Log in with your phone number to see your personal expenses and balances."
+      title="Sign In to Splitwise"
+      description="Log in with your phone number or email to sync your expenses."
     >
       <div className="space-y-4 pt-1">
         {/* Method Switcher Tabs */}
@@ -269,156 +215,39 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </button>
         </div>
 
-        {/* 1. Phone Login (Primary User Request) */}
+        {/* 1. Phone Login */}
         {authMethod === 'phone' && (
-          <div className="space-y-4">
-            <form onSubmit={handlePhoneLogin} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="tel"
-                  placeholder="e.g. 9876543212"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  leftIcon={<Phone className="h-4 w-4" />}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Your Name <span className="text-slate-400 font-normal">(optional if registered)</span>
-                </label>
-                <Input
-                  placeholder="e.g. Rahul Verma"
-                  value={phoneName}
-                  onChange={(e) => setPhoneName(e.target.value)}
-                  leftIcon={<User className="h-4 w-4" />}
-                />
-              </div>
-
-              <Button type="submit" className="w-full h-11 text-sm font-semibold mt-1">
-                <LogIn className="h-4 w-4 mr-2" />
-                Log In with Phone Number
-              </Button>
-            </form>
-
-            {/* Quick 1-Tap Switch List */}
-            <div className="pt-2 border-t border-slate-100">
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                <Users className="h-3.5 w-3.5 text-blue-600" />
-                Or 1-Tap Switch Between Profiles:
-              </p>
-              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                {/* Seed user Alex */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleQuickSwitch({
-                      name: 'Alex Rivers',
-                      phone: '9876543210',
-                      id: 'usr_alex'
-                    })
-                  }
-                  className="w-full flex items-center justify-between p-2 rounded-xl border border-slate-200/90 hover:border-blue-300 hover:bg-blue-50/50 transition-all text-left"
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Avatar name="Alex Rivers" size="sm" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-800">Alex Rivers</p>
-                      <p className="text-[10px] text-slate-500">Phone: 9876543210</p>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-semibold text-blue-600 flex items-center gap-0.5">
-                    Switch <ArrowRight className="h-3 w-3" />
-                  </span>
-                </button>
-
-                {/* Priya */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleQuickSwitch({
-                      name: 'Priya Sharma',
-                      phone: '9876543211',
-                      id: 'usr_priya'
-                    })
-                  }
-                  className="w-full flex items-center justify-between p-2 rounded-xl border border-slate-200/90 hover:border-blue-300 hover:bg-blue-50/50 transition-all text-left"
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Avatar name="Priya Sharma" size="sm" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-800">Priya Sharma</p>
-                      <p className="text-[10px] text-slate-500">Phone: 9876543211</p>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-semibold text-blue-600 flex items-center gap-0.5">
-                    Switch <ArrowRight className="h-3 w-3" />
-                  </span>
-                </button>
-
-                {/* Rahul */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleQuickSwitch({
-                      name: 'Rahul Verma',
-                      phone: '9876543212',
-                      id: 'usr_rahul'
-                    })
-                  }
-                  className="w-full flex items-center justify-between p-2 rounded-xl border border-slate-200/90 hover:border-blue-300 hover:bg-blue-50/50 transition-all text-left"
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Avatar name="Rahul Verma" size="sm" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-800">Rahul Verma</p>
-                      <p className="text-[10px] text-slate-500">Phone: 9876543212</p>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-semibold text-blue-600 flex items-center gap-0.5">
-                    Switch <ArrowRight className="h-3 w-3" />
-                  </span>
-                </button>
-
-                {/* Additional contacts if user added any */}
-                {contacts
-                  .filter(
-                    (c) =>
-                      !['9876543210', '9876543211', '9876543212'].includes(
-                        c.phone.replace(/\D/g, '')
-                      )
-                  )
-                  .map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() =>
-                        handleQuickSwitch({
-                          name: c.name,
-                          phone: c.phone,
-                          id: c.id
-                        })
-                      }
-                      className="w-full flex items-center justify-between p-2 rounded-xl border border-slate-200/90 hover:border-blue-300 hover:bg-blue-50/50 transition-all text-left"
-                    >
-                      <div className="flex items-center space-x-2.5">
-                        <Avatar name={c.name} size="sm" />
-                        <div>
-                          <p className="text-xs font-bold text-slate-800">{c.name}</p>
-                          <p className="text-[10px] text-slate-500">Phone: {c.phone}</p>
-                        </div>
-                      </div>
-                      <span className="text-[11px] font-semibold text-blue-600 flex items-center gap-0.5">
-                        Switch <ArrowRight className="h-3 w-3" />
-                      </span>
-                    </button>
-                  ))}
-              </div>
+          <form onSubmit={handlePhoneLogin} className="space-y-3 pt-1">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="tel"
+                placeholder="e.g. 9876543210"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                leftIcon={<Phone className="h-4 w-4" />}
+              />
             </div>
-          </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Your Name <span className="text-slate-400 font-normal">(optional if already registered)</span>
+              </label>
+              <Input
+                placeholder="e.g. John Doe"
+                value={phoneName}
+                onChange={(e) => setPhoneName(e.target.value)}
+                leftIcon={<User className="h-4 w-4" />}
+              />
+            </div>
+
+            <Button type="submit" className="w-full h-11 text-sm font-semibold mt-2">
+              <LogIn className="h-4 w-4 mr-2" />
+              Log In with Phone Number
+            </Button>
+          </form>
         )}
 
         {/* 2. Email Auth */}
@@ -440,7 +269,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     Your Name
                   </label>
                   <Input
-                    placeholder="e.g. Alex Rivers"
+                    placeholder="e.g. John Doe"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     leftIcon={<User className="h-4 w-4" />}
@@ -521,17 +350,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </Button>
           </div>
         )}
-
-        {/* Demo Mode Link */}
-        <div className="pt-2 border-t border-slate-100 text-center">
-          <button
-            type="button"
-            onClick={handleGuestDemo}
-            className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            Want to test first? <span className="text-blue-600 underline">Continue as Guest (Alex)</span>
-          </button>
-        </div>
       </div>
     </Dialog>
   );

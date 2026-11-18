@@ -19,7 +19,6 @@ import {
   TrendingUp,
   TrendingDown,
   Phone,
-  ArrowRightLeft,
   Sparkles
 } from 'lucide-react';
 
@@ -90,33 +89,23 @@ export function DashboardPage() {
       {/* Fixed Sticky Header */}
       <header className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md px-4 py-3 border-b border-slate-200/70 shadow-2xs">
         <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setIsAuthOpen(true)}
-            className="flex items-center space-x-3 text-left hover:opacity-80 transition-opacity"
-            title="Click to switch account or phone number"
-          >
+          <div className="flex items-center space-x-3">
             <Avatar name={currentUser?.name || 'User'} size="md" />
             <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-base font-bold text-slate-900 leading-tight">
-                  {currentUser?.name || 'User'}
-                </h1>
-                <span className="text-[10px] font-semibold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                  <ArrowRightLeft className="h-2.5 w-2.5" /> Switch
-                </span>
-              </div>
+              <h1 className="text-base font-bold text-slate-900 leading-tight">
+                {currentUser?.name || 'User'}
+              </h1>
               {currentUser?.phone ? (
                 <p className="text-[11px] font-medium text-slate-500 leading-none mt-0.5 flex items-center gap-1">
                   <Phone className="h-2.5 w-2.5" /> {currentUser.phone}
                 </p>
               ) : (
                 <p className="text-[11px] font-medium text-slate-500 leading-none mt-0.5">
-                  Guest / Demo Mode
+                  Welcome to Splitwise
                 </p>
               )}
             </div>
-          </button>
+          </div>
 
           <div className="flex items-center space-x-2">
             <Button
@@ -262,8 +251,8 @@ export function DashboardPage() {
                 <Button size="sm" onClick={() => setIsCreateOpen(true)}>
                   <Plus className="h-4 w-4 mr-1" /> Create Group
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setIsAuthOpen(true)}>
-                  <ArrowRightLeft className="h-3.5 w-3.5 mr-1" /> Switch Account
+                <Button size="sm" variant="outline" onClick={() => setIsJoinOpen(true)}>
+                  <QrCode className="h-3.5 w-3.5 mr-1 text-slate-500" /> Join Group
                 </Button>
               </div>
             </div>
