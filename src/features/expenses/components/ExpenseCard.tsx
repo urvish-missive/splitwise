@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Expense, Group } from '@/types';
 import { Card } from '@/features/ui/Card';
-import { CATEGORY_INFO, formatCurrency, formatDate } from '@/lib/utils';
+import { CATEGORY_INFO, formatCurrency, formatDate, findMemberForUser } from '@/lib/utils';
 import { useAppSelector } from '@/app/hooks';
 import {
   UtensilsCrossed,
@@ -37,10 +37,12 @@ export function ExpenseCard({ expense, group }: ExpenseCardProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   const payer = group.members.find((m) => m.id === expense.paidById);
-  const isPayerCurrentUser = currentUser?.id === expense.paidById;
+  const currentMember = findMemberForUser(group.members, currentUser);
+  const myMemberId = currentMember?.id || currentUser?.id;
+  const isPayerCurrentUser = myMemberId === expense.paidById;
 
   // Calculate current user's personal share
-  const mySplit = expense.splits.find((s) => s.memberId === currentUser?.id);
+  const mySplit = expense.splits.find((s) => s.memberId === myMemberId);
   const myOwedShare = mySplit ? mySplit.amount : 0;
 
   // Status for current user

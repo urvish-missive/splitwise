@@ -4,7 +4,7 @@ import { Group } from '@/types';
 import { Card } from '@/features/ui/Card';
 import { Avatar } from '@/features/ui/Avatar';
 import { InviteShareModal } from './InviteShareModal';
-import { formatCurrency, GROUP_CATEGORY_INFO } from '@/lib/utils';
+import { formatCurrency, GROUP_CATEGORY_INFO, findMemberForUser } from '@/lib/utils';
 import { useAppSelector } from '@/app/hooks';
 import { calculateGroupBalances } from '@/features/balances/balanceCalculator';
 import { ChevronRight, Users, Share2 } from 'lucide-react';
@@ -29,7 +29,8 @@ export function GroupCard({ group }: GroupCardProps) {
     groupSettlements
   );
 
-  const userBalance = currentUser ? memberBalances[currentUser.id]?.netBalance || 0 : 0;
+  const currentMember = findMemberForUser(group.members, currentUser);
+  const userBalance = currentMember ? memberBalances[currentMember.id]?.netBalance || 0 : 0;
   const categoryMeta = GROUP_CATEGORY_INFO[group.category] || GROUP_CATEGORY_INFO.other;
 
   return (

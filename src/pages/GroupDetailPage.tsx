@@ -23,7 +23,7 @@ import { Card } from '@/features/ui/Card';
 import { Tabs } from '@/features/ui/Tabs';
 import { Avatar } from '@/features/ui/Avatar';
 import { Badge } from '@/features/ui/Badge';
-import { formatCurrency, GROUP_CATEGORY_INFO } from '@/lib/utils';
+import { formatCurrency, GROUP_CATEGORY_INFO, findMemberForUser, isSamePhone } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -80,8 +80,10 @@ export function GroupDetailPage() {
     groupSettlements
   );
 
-  const userBalance = currentUser
-    ? balanceCalculation.memberBalances[currentUser.id]?.netBalance || 0
+  const currentMember = findMemberForUser(group.members, currentUser);
+
+  const userBalance = currentMember
+    ? balanceCalculation.memberBalances[currentMember.id]?.netBalance || 0
     : 0;
 
   const categoryMeta = GROUP_CATEGORY_INFO[group.category] || GROUP_CATEGORY_INFO.other;
@@ -397,28 +399,44 @@ export function GroupDetailPage() {
               </div>
 
               <div className="divide-y divide-slate-100 pt-1">
-                {group.members.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between py-3 first:pt-2 last:pb-1"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Avatar name={member.name} size="md" />
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{member.name}</p>
-                        {member.email && (
-                          <p className="text-xs text-slate-500">{member.email}</p>
-                        )}
-                      </div>
-                    </div>
+                {group.members.map((member) => {
+                  const isYou =
+                    member.id === currentMember?.id ||
+                    (currentUser?.phone && member.phone && isSamePhone(member.phone, currentUser.phone));
 
-                    {member.id === group.createdBy && (
-                      <Badge variant="outline" className="text-[10px]">
-                        Creator
-                      </Badge>
-                    )}
-                  </div>
-                ))}
+                  return (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between py-3 first:pt-2 last:pb-1"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Avatar name={member.name} size="md" />
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-semibold text-slate-900">{member.name}</p>
+                            {isYou && (
+                              <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-1.5 py-0.5 rounded-full">
+                                You
+                              </span>
+                            )}
+                          </div>
+                          {member.phone && (
+                            <p className="text-xs text-slate-500">{member.phone}</p>
+                          )}
+                          {member.email && !member.phone && (
+                            <p className="text-xs text-slate-500">{member.email}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {member.id === group.createdBy && (
+                        <Badge variant="outline" className="text-[10px]">
+                          Creator
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </Card>
           </div>

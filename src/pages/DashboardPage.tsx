@@ -4,11 +4,12 @@ import { GroupCard } from '@/features/groups/components/GroupCard';
 import { CreateGroupModal } from '@/features/groups/components/CreateGroupModal';
 import { JoinGroupModal } from '@/features/groups/components/JoinGroupModal';
 import { AddExpenseModal } from '@/features/expenses/components/AddExpenseModal';
+import { AuthModal } from '@/features/auth/components/AuthModal';
 import { Button } from '@/features/ui/Button';
 import { Input } from '@/features/ui/Input';
 import { Avatar } from '@/features/ui/Avatar';
 import { Card } from '@/features/ui/Card';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, findMemberForUser, isUserInGroup } from '@/lib/utils';
 import { calculateGroupBalances } from '@/features/balances/balanceCalculator';
 import {
   Plus,
@@ -17,7 +18,8 @@ import {
   Users,
   TrendingUp,
   TrendingDown,
-  Layers,
+  Phone,
+  ArrowRightLeft,
   Sparkles
 } from 'lucide-react';
 
@@ -32,12 +34,19 @@ export function DashboardPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [isExpenseOpen, setIsExpenseOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
-  // Calculate overall net balance across all groups for currentUser
+  // Groups belonging to the current user (by user ID or Phone number)
+  const userGroups = groups.filter((g) => isUserInGroup(g.members, currentUser));
+
+  // Calculate overall net balance across all user's groups
   let totalOwedToUser = 0; // Money others owe current user (+)
   let totalUserOwes = 0; // Money current user owes others (-)
 
-  groups.forEach((group) => {
+  userGroups.forEach((group) => {
+    const member = findMemberForUser(group.members, currentUser);
+    if (!member) return;
+
     const groupExpenses = allExpenses.filter((e) => e.groupId === group.id);
     const groupSettlements = allSettlements.filter((s) => s.groupId === group.id);
     const { memberBalances } = calculateGroupBalances(
@@ -46,7 +55,7 @@ export function DashboardPage() {
       groupSettlements
     );
 
-    const userBalance = currentUser ? memberBalances[currentUser.id]?.netBalance || 0 : 0;
+    const userBalance = memberBalances[member.id]?.netBalance || 0;
     if (userBalance > 0) {
       totalOwedToUser += userBalance;
     } else if (userBalance < 0) {
@@ -57,8 +66,8 @@ export function DashboardPage() {
   const netBalance = totalOwedToUser - totalUserOwes;
   const currency = currentUser?.defaultCurrency || 'INR';
 
-  // Filter groups
-  const filteredGroups = groups.filter((g) => {
+  // Filter user's groups by search and category
+  const filteredGroups = userGroups.filter((g) => {
     const matchesSearch =
       g.name.toLowerCase().includes(search.toLowerCase()) ||
       g.members.some((m) => m.name.toLowerCase().includes(search.toLowerCase()));
@@ -81,15 +90,33 @@ export function DashboardPage() {
       {/* Fixed Sticky Header */}
       <header className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md px-4 py-3 border-b border-slate-200/70 shadow-2xs">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <button
+            type="button"
+            onClick={() => setIsAuthOpen(true)}
+            className="flex items-center space-x-3 text-left hover:opacity-80 transition-opacity"
+            title="Click to switch account or phone number"
+          >
             <Avatar name={currentUser?.name || 'User'} size="md" />
             <div>
-              <p className="text-[11px] font-medium text-slate-500 leading-none">Welcome back,</p>
-              <h1 className="text-base font-bold text-slate-900 leading-tight mt-0.5">
-                {currentUser?.name || 'User'}
-              </h1>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-base font-bold text-slate-900 leading-tight">
+                  {currentUser?.name || 'User'}
+                </h1>
+                <span className="text-[10px] font-semibold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                  <ArrowRightLeft className="h-2.5 w-2.5" /> Switch
+                </span>
+              </div>
+              {currentUser?.phone ? (
+                <p className="text-[11px] font-medium text-slate-500 leading-none mt-0.5 flex items-center gap-1">
+                  <Phone className="h-2.5 w-2.5" /> {currentUser.phone}
+                </p>
+              ) : (
+                <p className="text-[11px] font-medium text-slate-500 leading-none mt-0.5">
+                  Guest / Demo Mode
+                </p>
+              )}
             </div>
-          </div>
+          </button>
 
           <div className="flex items-center space-x-2">
             <Button
@@ -114,11 +141,11 @@ export function DashboardPage() {
       </header>
 
       <div className="px-4 pt-4">
-        {/* Overall Total Balance Card */}
+        {/* Overall Total Balance Card for This User */}
         <Card className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 border-none shadow-md shadow-slate-900/10 mb-5 relative overflow-hidden">
           <div className="relative z-10">
             <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-              Overall Net Balance
+              {currentUser?.name ? `${currentUser.name}'s Net Balance` : 'Overall Net Balance'}
             </p>
             <div className="flex items-baseline gap-2 mt-1">
               <h2 className="text-3xl font-extrabold tracking-tight">
@@ -137,7 +164,7 @@ export function DashboardPage() {
                 {Math.abs(netBalance) < 0.01
                   ? 'All settled up'
                   : netBalance > 0
-                  ? 'You are owed in total'
+                  ? 'You are owed'
                   : 'You owe in total'}
               </span>
             </div>
@@ -222,16 +249,21 @@ export function DashboardPage() {
                 <Users className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">No groups found</p>
+                <p className="text-sm font-semibold text-slate-800">
+                  {currentUser?.name ? `No groups found for ${currentUser.name}` : 'No groups found'}
+                </p>
                 <p className="text-xs text-slate-500 mt-1">
-                  {search
-                    ? 'Try searching with another keyword.'
-                    : 'Create a group or join with an invite code to start splitting.'}
+                  {currentUser?.phone
+                    ? `Phone ${currentUser.phone} is not part of any group yet. Create a group or ask a friend to add this number!`
+                    : 'Create a new group or join with an invite code.'}
                 </p>
               </div>
               <div className="pt-2 flex justify-center gap-2">
                 <Button size="sm" onClick={() => setIsCreateOpen(true)}>
                   <Plus className="h-4 w-4 mr-1" /> Create Group
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setIsAuthOpen(true)}>
+                  <ArrowRightLeft className="h-3.5 w-3.5 mr-1" /> Switch Account
                 </Button>
               </div>
             </div>
@@ -255,6 +287,7 @@ export function DashboardPage() {
         isOpen={isExpenseOpen}
         onClose={() => setIsExpenseOpen(false)}
       />
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </div>
   );
 }

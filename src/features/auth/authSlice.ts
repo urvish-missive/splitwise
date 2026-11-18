@@ -53,6 +53,12 @@ export const authSlice = createSlice({
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state.user));
       }
     },
+    updatePhone: (state, action: PayloadAction<string>) => {
+      if (state.user) {
+        state.user.phone = action.payload;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.user));
+      }
+    },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
@@ -67,7 +73,7 @@ export const authSlice = createSlice({
   }
 });
 
-export const { setUser, updateCurrency, updateName, setLoading, setDemoMode, logout } =
+export const { setUser, updateCurrency, updateName, updatePhone, setLoading, setDemoMode, logout } =
   authSlice.actions;
 
 export default authSlice.reducer;

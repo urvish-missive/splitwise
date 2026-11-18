@@ -3,9 +3,19 @@ export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' | 'SGD'
 export interface UserProfile {
   id: string;
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
   avatarUrl?: string;
   defaultCurrency: CurrencyCode;
+  createdAt: string;
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  avatarUrl?: string;
   createdAt: string;
 }
 
@@ -14,6 +24,7 @@ export type GroupCategory = 'trip' | 'home' | 'couple' | 'party' | 'office' | 'o
 export interface GroupMember {
   id: string;
   name: string;
+  phone?: string;
   email?: string;
   avatarUrl?: string;
   isRegistered?: boolean;

@@ -90,3 +90,47 @@ export const GROUP_CATEGORY_INFO: Record<
   office: { label: 'Office & Work', icon: 'Briefcase', color: 'text-violet-600 bg-violet-50' },
   other: { label: 'Other', icon: 'Layers', color: 'text-slate-600 bg-slate-50' }
 };
+
+/**
+ * Normalizes phone numbers for reliable comparison (keeps last 10 digits).
+ */
+export function normalizePhone(phone?: string): string {
+  if (!phone) return '';
+  const digits = phone.replace(/\D/g, '');
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+/**
+ * Checks if two phone numbers match.
+ */
+export function isSamePhone(p1?: string, p2?: string): boolean {
+  const n1 = normalizePhone(p1);
+  const n2 = normalizePhone(p2);
+  return !!n1 && !!n2 && n1 === n2;
+}
+
+/**
+ * Finds the group member matching the current user profile (by ID or phone).
+ */
+export function findMemberForUser<T extends { id: string; phone?: string }>(
+  members: T[],
+  user?: { id?: string; phone?: string } | null
+): T | undefined {
+  if (!user) return undefined;
+  return members.find(
+    (m) =>
+      (user.id && m.id === user.id) ||
+      (user.phone && m.phone && isSamePhone(user.phone, m.phone))
+  );
+}
+
+/**
+ * Checks if a user is a member of the group (by ID or phone).
+ */
+export function isUserInGroup<T extends { id: string; phone?: string }>(
+  members: T[],
+  user?: { id?: string; phone?: string } | null
+): boolean {
+  return !!findMemberForUser(members, user);
+}
+

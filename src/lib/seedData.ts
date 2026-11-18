@@ -1,13 +1,45 @@
-import { UserProfile, Group, Expense, Settlement } from '@/types';
+import { UserProfile, Group, Expense, Settlement, Contact } from '@/types';
 
 export const CURRENT_USER: UserProfile = {
   id: 'usr_alex',
   name: 'Alex Rivers',
   email: 'alex.rivers@example.com',
+  phone: '9876543210',
   avatarUrl: '',
   defaultCurrency: 'INR',
   createdAt: new Date('2026-01-01').toISOString()
 };
+
+export const SEED_CONTACTS: Contact[] = [
+  {
+    id: 'cnt_priya',
+    name: 'Priya Sharma',
+    phone: '9876543211',
+    email: 'priya@example.com',
+    createdAt: new Date('2026-01-01').toISOString()
+  },
+  {
+    id: 'cnt_rahul',
+    name: 'Rahul Verma',
+    phone: '9876543212',
+    email: 'rahul@example.com',
+    createdAt: new Date('2026-01-01').toISOString()
+  },
+  {
+    id: 'cnt_sneha',
+    name: 'Sneha Patel',
+    phone: '9876543213',
+    email: 'sneha@example.com',
+    createdAt: new Date('2026-01-01').toISOString()
+  },
+  {
+    id: 'cnt_david',
+    name: 'David Miller',
+    phone: '9876543214',
+    email: 'david@example.com',
+    createdAt: new Date('2026-01-01').toISOString()
+  }
+];
 
 export const SEED_GROUPS: Group[] = [
   {
@@ -22,10 +54,10 @@ export const SEED_GROUPS: Group[] = [
     updatedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
     memberIds: ['usr_alex', 'usr_priya', 'usr_rahul', 'usr_sneha'],
     members: [
-      { id: 'usr_alex', name: 'Alex Rivers (You)', email: 'alex.rivers@example.com' },
-      { id: 'usr_priya', name: 'Priya Sharma', email: 'priya@example.com' },
-      { id: 'usr_rahul', name: 'Rahul Verma', email: 'rahul@example.com' },
-      { id: 'usr_sneha', name: 'Sneha Patel', email: 'sneha@example.com' }
+      { id: 'usr_alex', name: 'Alex Rivers', phone: '9876543210', email: 'alex.rivers@example.com' },
+      { id: 'usr_priya', name: 'Priya Sharma', phone: '9876543211', email: 'priya@example.com' },
+      { id: 'usr_rahul', name: 'Rahul Verma', phone: '9876543212', email: 'rahul@example.com' },
+      { id: 'usr_sneha', name: 'Sneha Patel', phone: '9876543213', email: 'sneha@example.com' }
     ]
   },
   {
@@ -40,9 +72,9 @@ export const SEED_GROUPS: Group[] = [
     updatedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
     memberIds: ['usr_alex', 'usr_david', 'usr_rahul'],
     members: [
-      { id: 'usr_alex', name: 'Alex Rivers (You)', email: 'alex.rivers@example.com' },
-      { id: 'usr_david', name: 'David Miller', email: 'david@example.com' },
-      { id: 'usr_rahul', name: 'Rahul Verma', email: 'rahul@example.com' }
+      { id: 'usr_alex', name: 'Alex Rivers', phone: '9876543210', email: 'alex.rivers@example.com' },
+      { id: 'usr_david', name: 'David Miller', phone: '9876543214', email: 'david@example.com' },
+      { id: 'usr_rahul', name: 'Rahul Verma', phone: '9876543212', email: 'rahul@example.com' }
     ]
   },
   {
@@ -57,9 +89,9 @@ export const SEED_GROUPS: Group[] = [
     updatedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
     memberIds: ['usr_alex', 'usr_priya', 'usr_david'],
     members: [
-      { id: 'usr_alex', name: 'Alex Rivers (You)', email: 'alex.rivers@example.com' },
-      { id: 'usr_priya', name: 'Priya Sharma', email: 'priya@example.com' },
-      { id: 'usr_david', name: 'David Miller', email: 'david@example.com' }
+      { id: 'usr_alex', name: 'Alex Rivers', phone: '9876543210', email: 'alex.rivers@example.com' },
+      { id: 'usr_priya', name: 'Priya Sharma', phone: '9876543211', email: 'priya@example.com' },
+      { id: 'usr_david', name: 'David Miller', phone: '9876543214', email: 'david@example.com' }
     ]
   }
 ];

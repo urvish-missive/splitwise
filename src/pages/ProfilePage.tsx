@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
-import { updateCurrency, updateName, setUser, logout, setDemoMode } from '@/features/auth/authSlice';
+import { updateCurrency, updateName, updatePhone, setUser, logout, setDemoMode } from '@/features/auth/authSlice';
 import { resetToDemoData } from '@/features/expenses/expensesSlice';
 import { setGroups } from '@/features/groups/groupsSlice';
 import { SEED_GROUPS, CURRENT_USER } from '@/lib/seedData';
@@ -34,6 +34,7 @@ export function ProfilePage() {
   const isDemoMode = useAppSelector((state) => state.auth.isDemoMode);
 
   const [name, setName] = useState(currentUser?.name || '');
+  const [phone, setPhone] = useState(currentUser?.phone || '');
   const [currency, setCurrency] = useState<CurrencyCode>(
     currentUser?.defaultCurrency || 'INR'
   );
@@ -43,6 +44,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     if (currentUser?.name) setName(currentUser.name);
+    if (currentUser?.phone) setPhone(currentUser.phone);
     if (currentUser?.defaultCurrency) setCurrency(currentUser.defaultCurrency);
   }, [currentUser]);
 
@@ -82,6 +84,7 @@ export function ProfilePage() {
   const handleSaveProfile = () => {
     if (!name.trim()) return;
     dispatch(updateName(name.trim()));
+    if (phone.trim()) dispatch(updatePhone(phone.trim()));
     dispatch(updateCurrency(currency));
     toast.success('Profile and preferences updated!');
   };
@@ -165,7 +168,9 @@ export function ProfilePage() {
                     {isRealUser ? 'Cloud Connected' : 'Guest / Demo'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">{currentUser?.email}</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {currentUser?.phone ? `Phone: ${currentUser.phone}` : currentUser?.email}
+                </p>
               </div>
             </div>
 
@@ -222,6 +227,18 @@ export function ProfilePage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Phone Number
+            </label>
+            <Input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Your 10-digit phone number"
             />
           </div>
 
