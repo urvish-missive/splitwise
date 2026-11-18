@@ -1,7 +1,58 @@
 import { describe, it, expect } from 'vitest';
 import { normalizePhone, isSamePhone, findMemberForUser, isUserInGroup } from '@/lib/utils';
-import { SEED_GROUPS, SEED_CONTACTS } from '@/lib/seedData';
-import { GroupMember, UserProfile } from '@/types';
+import { Group, GroupMember, UserProfile } from '@/types';
+
+const TEST_GROUPS: Group[] = [
+  {
+    id: 'grp_goa',
+    name: 'Goa Trip 🏖️',
+    category: 'trip',
+    inviteCode: 'GOA-4821',
+    currency: 'INR',
+    createdBy: 'usr_alex',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    memberIds: ['usr_alex', 'usr_priya', 'usr_rahul', 'usr_sneha'],
+    members: [
+      { id: 'usr_alex', name: 'Alex Rivers', phone: '9876543210' },
+      { id: 'usr_priya', name: 'Priya Sharma', phone: '9876543211' },
+      { id: 'usr_rahul', name: 'Rahul Verma', phone: '9876543212' },
+      { id: 'usr_sneha', name: 'Sneha Patel', phone: '9876543213' }
+    ]
+  },
+  {
+    id: 'grp_flat',
+    name: 'Flat 402 Expenses 🏠',
+    category: 'home',
+    inviteCode: 'FLT-9104',
+    currency: 'INR',
+    createdBy: 'usr_alex',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    memberIds: ['usr_alex', 'usr_david', 'usr_rahul'],
+    members: [
+      { id: 'usr_alex', name: 'Alex Rivers', phone: '9876543210' },
+      { id: 'usr_david', name: 'David Miller', phone: '9876543214' },
+      { id: 'usr_rahul', name: 'Rahul Verma', phone: '9876543212' }
+    ]
+  },
+  {
+    id: 'grp_dinner',
+    name: 'Weekend Dinner 🍕',
+    category: 'party',
+    inviteCode: 'DIN-3392',
+    currency: 'INR',
+    createdBy: 'usr_priya',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    memberIds: ['usr_alex', 'usr_priya', 'usr_david'],
+    members: [
+      { id: 'usr_alex', name: 'Alex Rivers', phone: '9876543210' },
+      { id: 'usr_priya', name: 'Priya Sharma', phone: '9876543211' },
+      { id: 'usr_david', name: 'David Miller', phone: '9876543214' }
+    ]
+  }
+];
 
 describe('Phone-based user identification and group filtering', () => {
   it('correctly normalizes phone numbers and checks matching', () => {
@@ -41,7 +92,7 @@ describe('Phone-based user identification and group filtering', () => {
       createdAt: ''
     };
 
-    const rahulGroups = SEED_GROUPS.filter((g) => isUserInGroup(g.members, rahulUser));
+    const rahulGroups = TEST_GROUPS.filter((g) => isUserInGroup(g.members, rahulUser));
 
     expect(rahulGroups.length).toBe(2);
     const groupNames = rahulGroups.map((g) => g.name);
@@ -59,7 +110,7 @@ describe('Phone-based user identification and group filtering', () => {
       createdAt: ''
     };
 
-    const priyaGroups = SEED_GROUPS.filter((g) => isUserInGroup(g.members, priyaUser));
+    const priyaGroups = TEST_GROUPS.filter((g) => isUserInGroup(g.members, priyaUser));
 
     expect(priyaGroups.length).toBe(2);
     const groupNames = priyaGroups.map((g) => g.name);

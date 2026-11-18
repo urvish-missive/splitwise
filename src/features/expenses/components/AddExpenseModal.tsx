@@ -11,7 +11,7 @@ import { SplitSelector } from './SplitSelector';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { addExpense } from '@/features/expenses/expensesSlice';
 import { saveExpenseToFirestore } from '@/features/api/firestoreService';
-import { generateId, CATEGORY_INFO } from '@/lib/utils';
+import { generateId, CATEGORY_INFO, findMemberForUser } from '@/lib/utils';
 import { Expense, ExpenseCategory, ExpenseSplit, Group, SplitType } from '@/types';
 import { toast } from 'sonner';
 import { Receipt, Calendar, FileText, Check } from 'lucide-react';
@@ -77,6 +77,7 @@ export function AddExpenseModal({
 
   const enteredAmount = watch('amount') || 0;
   const watchedPaidById = watch('paidById');
+  const currentMember = findMemberForUser(currentGroup?.members || [], currentUser);
 
   useEffect(() => {
     if (defaultGroupId) {
@@ -89,10 +90,13 @@ export function AddExpenseModal({
   }, [defaultGroupId, groups, setValue, selectedGroupId]);
 
   useEffect(() => {
-    if (currentUser && !watchedPaidById) {
-      setValue('paidById', currentUser.id);
+    if (currentGroup && currentGroup.members.length > 0) {
+      const isCurrentPayerValid = currentGroup.members.some((m) => m.id === watchedPaidById);
+      if (!watchedPaidById || !isCurrentPayerValid) {
+        setValue('paidById', currentMember?.id || currentGroup.members[0].id);
+      }
     }
-  }, [currentUser, setValue, watchedPaidById]);
+  }, [currentGroup, currentMember, setValue, watchedPaidById]);
 
   // Handle group change
   const handleGroupSelect = (groupId: string) => {
@@ -224,12 +228,17 @@ export function AddExpenseModal({
         {/* Step 3: Paid By Selector */}
         {currentGroup && (
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Paid By
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+              <span>Paid By (Select anyone in group)</span>
+              <span className="text-[11px] text-slate-400 font-normal">
+                Who made this payment?
+              </span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {currentGroup.members.map((member) => {
                 const isSelected = watchedPaidById === member.id;
+                const isThisYou = (currentMember?.id || currentUser?.id) === member.id;
+
                 return (
                   <button
                     key={member.id}
@@ -242,9 +251,16 @@ export function AddExpenseModal({
                     }`}
                   >
                     <Avatar name={member.name} size="sm" />
-                    <span className="text-xs font-medium text-slate-800 line-clamp-1 flex-1">
-                      {member.name}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-800 line-clamp-1">
+                        {member.name} {isThisYou ? '(You)' : ''}
+                      </p>
+                      {member.phone && (
+                        <p className="text-[10px] text-slate-400 leading-none mt-0.5 truncate">
+                          {member.phone}
+                        </p>
+                      )}
+                    </div>
                     {isSelected && (
                       <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
                     )}

@@ -2,7 +2,7 @@ import React from 'react';
 import { useAppSelector } from '@/app/hooks';
 import { Card } from '@/features/ui/Card';
 import { Avatar } from '@/features/ui/Avatar';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, findMemberForUser } from '@/lib/utils';
 import { Clock, Receipt, CheckCircle2, ArrowRight } from 'lucide-react';
 
 interface ActivityItem {
@@ -35,30 +35,46 @@ export function ActivityPage() {
     const group = groups.find((g) => g.id === exp.groupId);
     if (!group) return;
 
+    const currentMember = findMemberForUser(group.members, currentUser);
+    const myMemberId = currentMember?.id || currentUser?.id;
+
     const payer = group.members.find((m) => m.id === exp.paidById);
-    const isPayerCurrentUser = currentUser?.id === exp.paidById;
-    const mySplit = exp.splits.find((s) => s.memberId === currentUser?.id);
+    const isPayerCurrentUser = myMemberId === exp.paidById;
+    const mySplit = exp.splits.find((s) => s.memberId === myMemberId);
     const myOwedShare = mySplit ? mySplit.amount : 0;
+
+    const splitNames = exp.splits.map((s) => {
+      const m = group.members.find((gm) => gm.id === s.memberId);
+      return m ? (m.id === myMemberId ? 'You' : m.name) : 'Member';
+    });
+    const forWhom =
+      splitNames.length === group.members.length && group.members.length > 2
+        ? `Everyone (${group.members.length})`
+        : splitNames.slice(0, 2).join(', ') + (splitNames.length > 2 ? ` +${splitNames.length - 2}` : '');
 
     let userImpact;
     if (isPayerCurrentUser) {
       const lent = exp.amount - myOwedShare;
       if (lent > 0.01) {
         userImpact = { text: 'you lent', amount: lent, isPositive: true };
+      } else {
+        userImpact = { text: 'paid for self', amount: exp.amount, isPositive: true };
       }
     } else if (myOwedShare > 0.01) {
       userImpact = { text: 'you borrowed', amount: myOwedShare, isPositive: false };
     }
 
+    const payerDisplayName = isPayerCurrentUser ? 'You' : payer?.name || 'Someone';
+
     activities.push({
       id: exp.id,
       type: 'expense',
-      title: exp.title,
+      title: `${exp.title} • Paid by ${payerDisplayName} for ${forWhom}`,
       amount: exp.amount,
       date: exp.date,
       groupName: group.name,
       currency: group.currency,
-      payerName: isPayerCurrentUser ? 'You' : payer?.name || 'Someone',
+      payerName: payerDisplayName,
       userImpact
     });
   });

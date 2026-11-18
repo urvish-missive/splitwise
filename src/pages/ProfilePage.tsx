@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
 import { updateCurrency, updateName, updatePhone, setUser, logout, setDemoMode } from '@/features/auth/authSlice';
-import { resetToDemoData } from '@/features/expenses/expensesSlice';
+import { setExpenses, setSettlements } from '@/features/expenses/expensesSlice';
 import { setGroups } from '@/features/groups/groupsSlice';
-import { SEED_GROUPS, CURRENT_USER } from '@/lib/seedData';
+import { setContacts } from '@/features/contacts/contactsSlice';
+import { CURRENT_USER } from '@/lib/seedData';
+import { wipeAllLocalData } from '@/lib/storageCleanup';
 import { Card } from '@/features/ui/Card';
 import { Button } from '@/features/ui/Button';
 import { Input } from '@/features/ui/Input';
@@ -96,16 +98,19 @@ export function ProfilePage() {
     toast.info('Signed out. Switched to guest mode.');
   };
 
-  const handleResetData = () => {
+  const handleClearAllData = () => {
     if (
       window.confirm(
-        'Reset all data back to original sample groups (Goa Trip, Flat Expenses, Weekend Dinner)?'
+        'Delete all groups, expenses, settlements, and dummy data to start completely fresh?'
       )
     ) {
+      wipeAllLocalData();
+      dispatch(setGroups([]));
+      dispatch(setExpenses([]));
+      dispatch(setSettlements([]));
+      dispatch(setContacts([]));
       dispatch(setUser(CURRENT_USER));
-      dispatch(setGroups(SEED_GROUPS));
-      dispatch(resetToDemoData());
-      toast.success('Reset to demo sample data completed!');
+      toast.success('All dummy data deleted! You now have a clean, fresh app.');
     }
   };
 
@@ -293,23 +298,23 @@ export function ProfilePage() {
           </p>
         </Card>
 
-        {/* Sample Data Reset */}
-        <Card className="border-slate-200/80 p-4">
+        {/* Clear All Dummy Data */}
+        <Card className="border-red-200/80 bg-red-50/30 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-semibold text-slate-900">Reset Demo Data</h4>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Restore sample Goa Trip, Flat, and Dinner expenses
+              <h4 className="text-sm font-bold text-red-900">Delete All Dummy Data</h4>
+              <p className="text-xs text-red-700/80 mt-0.5">
+                Wipe all sample groups, expenses, and contacts to start completely fresh
               </p>
             </div>
             <Button
               size="sm"
-              variant="outline"
-              onClick={handleResetData}
-              className="text-xs border-slate-200"
+              variant="destructive"
+              onClick={handleClearAllData}
+              className="text-xs font-semibold gap-1.5"
             >
-              <RotateCcw className="h-3.5 w-3.5 mr-1" />
-              Reset
+              <RotateCcw className="h-3.5 w-3.5" />
+              Clear All Data
             </Button>
           </div>
         </Card>

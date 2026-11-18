@@ -171,8 +171,9 @@ export function EditExpenseModal({
 
         {/* Paid By Selector */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-            Paid By
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+            <span>Paid By</span>
+            <span className="text-[11px] text-slate-400 font-normal">Select anyone in the group</span>
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {group.members.map((member) => {
@@ -189,9 +190,16 @@ export function EditExpenseModal({
                   }`}
                 >
                   <Avatar name={member.name} size="sm" />
-                  <span className="text-xs font-medium text-slate-800 line-clamp-1 flex-1">
-                    {member.name}
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 line-clamp-1">
+                      {member.name}
+                    </p>
+                    {member.phone && (
+                      <p className="text-[10px] text-slate-400 leading-none mt-0.5 truncate">
+                        {member.phone}
+                      </p>
+                    )}
+                  </div>
                   {isSelected && (
                     <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
                   )}
