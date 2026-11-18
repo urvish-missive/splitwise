@@ -10,6 +10,10 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_MEASUREMENT_ID?: string;
   readonly VITE_APP_NAME?: string;
   readonly VITE_DEFAULT_CURRENCY?: string;
+  readonly VITE_APP_URL?: string;
+  readonly VITE_ENABLE_FIREBASE_ANALYTICS?: string;
+  readonly VITE_FIREBASE_FUNCTIONS_REGION?: string;
+  readonly VITE_SUPPORT_EMAIL?: string;
 }
 
 interface ImportMeta {

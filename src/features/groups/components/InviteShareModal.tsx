@@ -25,7 +25,8 @@ export function InviteShareModal({ group, isOpen, onClose }: InviteShareModalPro
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  const inviteLink = `${window.location.origin}/join?code=${group.inviteCode}`;
+  const baseUrl = import.meta.env.VITE_APP_URL?.trim() || window.location.origin;
+  const inviteLink = `${baseUrl}/join?code=${group.inviteCode}`;
   const shareText = `Join my expense group "${group.name}" on Splitwise to track and split expenses with us! Use invite code: ${group.inviteCode}\n\nJoin here: ${inviteLink}`;
 
   const handleCopyLink = async () => {

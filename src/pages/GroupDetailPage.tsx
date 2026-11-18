@@ -135,7 +135,8 @@ export function GroupDetailPage() {
   };
 
   const handleQuickCopyLink = async () => {
-    const inviteLink = `${window.location.origin}/join?code=${group.inviteCode}`;
+    const baseUrl = import.meta.env.VITE_APP_URL?.trim() || window.location.origin;
+    const inviteLink = `${baseUrl}/join?code=${group.inviteCode}`;
     try {
       await navigator.clipboard.writeText(inviteLink);
       setQuickCopied(true);
