@@ -14,6 +14,7 @@ import { AddExpenseModal } from '@/features/expenses/components/AddExpenseModal'
 import { SettleUpModal } from '@/features/balances/components/SettleUpModal';
 import { InviteShareModal } from '@/features/groups/components/InviteShareModal';
 import { AddMemberModal } from '@/features/groups/components/AddMemberModal';
+import { EditGroupModal } from '@/features/groups/components/EditGroupModal';
 import { BalancesSummary } from '@/features/balances/components/BalancesSummary';
 import { DebtSimplificationCard } from '@/features/balances/components/DebtSimplificationCard';
 import { calculateGroupBalances } from '@/features/balances/balanceCalculator';
@@ -34,7 +35,8 @@ import {
   Trash2,
   Users,
   Copy,
-  Check
+  Check,
+  Edit3
 } from 'lucide-react';
 
 export function GroupDetailPage() {
@@ -52,6 +54,7 @@ export function GroupDetailPage() {
   const [isSettleOpen, setIsSettleOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
   const [expenseFilterCategory, setExpenseFilterCategory] = useState('all');
   const [quickCopied, setQuickCopied] = useState(false);
 
@@ -184,6 +187,16 @@ export function GroupDetailPage() {
             >
               <Share2 className="h-3.5 w-3.5" />
               <span>Share</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsEditGroupOpen(true)}
+              className="h-8 w-8 rounded-full text-slate-600 hover:bg-slate-200/60"
+              title="Edit Group Details"
+            >
+              <Edit3 className="h-4 w-4" />
             </Button>
 
             <Button
@@ -432,6 +445,11 @@ export function GroupDetailPage() {
         group={group}
         isOpen={isAddMemberOpen}
         onClose={() => setIsAddMemberOpen(false)}
+      />
+      <EditGroupModal
+        group={group}
+        isOpen={isEditGroupOpen}
+        onClose={() => setIsEditGroupOpen(false)}
       />
     </div>
   );
