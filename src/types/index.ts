@@ -5,6 +5,7 @@ export interface UserProfile {
   name: string;
   email?: string;
   phone?: string;
+  pin?: string;
   avatarUrl?: string;
   defaultCurrency: CurrencyCode;
   createdAt: string;

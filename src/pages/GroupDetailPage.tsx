@@ -15,6 +15,7 @@ import { SettleUpModal } from '@/features/balances/components/SettleUpModal';
 import { InviteShareModal } from '@/features/groups/components/InviteShareModal';
 import { AddMemberModal } from '@/features/groups/components/AddMemberModal';
 import { EditGroupModal } from '@/features/groups/components/EditGroupModal';
+import { AuthModal } from '@/features/auth/components/AuthModal';
 import { BalancesSummary } from '@/features/balances/components/BalancesSummary';
 import { DebtSimplificationCard } from '@/features/balances/components/DebtSimplificationCard';
 import { calculateGroupBalances } from '@/features/balances/balanceCalculator';
@@ -55,6 +56,7 @@ export function GroupDetailPage() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [expenseFilterCategory, setExpenseFilterCategory] = useState('all');
   const [quickCopied, setQuickCopied] = useState(false);
 
@@ -224,6 +226,24 @@ export function GroupDetailPage() {
       </header>
 
       <div className="px-4 pt-4">
+        {!currentUser && (
+          <div className="bg-blue-50 border border-blue-200/90 rounded-2xl p-3 mb-3.5 flex items-center justify-between gap-3 text-xs">
+            <div>
+              <span className="font-bold text-blue-900">Signed out: </span>
+              <span className="text-blue-800">
+                Sign in with your Phone & PIN to add expenses & settle up.
+              </span>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setIsAuthOpen(true)}
+              className="shrink-0 text-xs h-8 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Sign In
+            </Button>
+          </div>
+        )}
+
         {group.description && (
           <p className="text-xs text-slate-500 mb-3 -mt-1">{group.description}</p>
         )}
@@ -269,7 +289,14 @@ export function GroupDetailPage() {
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-800 relative z-10">
             <Button
-              onClick={() => setIsExpenseOpen(true)}
+              onClick={() => {
+                if (!currentUser) {
+                  toast.info('Please sign in with your phone and PIN first');
+                  setIsAuthOpen(true);
+                  return;
+                }
+                setIsExpenseOpen(true);
+              }}
               className="h-10 text-xs font-semibold gap-1.5 bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="h-4 w-4" />
@@ -277,7 +304,14 @@ export function GroupDetailPage() {
             </Button>
 
             <Button
-              onClick={() => setIsSettleOpen(true)}
+              onClick={() => {
+                if (!currentUser) {
+                  toast.info('Please sign in with your phone and PIN first');
+                  setIsAuthOpen(true);
+                  return;
+                }
+                setIsSettleOpen(true);
+              }}
               variant="outline"
               className="h-10 text-xs font-semibold gap-1.5 border-slate-700 bg-slate-800/80 text-white hover:bg-slate-700"
             >
@@ -468,6 +502,10 @@ export function GroupDetailPage() {
         group={group}
         isOpen={isEditGroupOpen}
         onClose={() => setIsEditGroupOpen(false)}
+      />
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
       />
     </div>
   );

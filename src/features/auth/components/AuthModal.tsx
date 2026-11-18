@@ -3,18 +3,15 @@ import { Dialog } from '@/features/ui/Dialog';
 import { Button } from '@/features/ui/Button';
 import { Input } from '@/features/ui/Input';
 import { Tabs } from '@/features/ui/Tabs';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { useAppDispatch } from '@/app/hooks';
 import { setUser, setDemoMode } from '@/features/auth/authSlice';
-import { addContact } from '@/features/contacts/contactsSlice';
+import { loginOrRegisterWithPhoneAndPin } from '@/features/auth/phoneAuthService';
 import {
   loginWithGoogle,
   loginWithEmail,
   registerWithEmail
 } from '@/features/auth/authService';
 import { saveUserProfileToFirestore } from '@/features/api/firestoreService';
-import { CURRENT_USER } from '@/lib/seedData';
-import { isSamePhone, normalizePhone } from '@/lib/utils';
-import { UserProfile } from '@/types';
 import { toast } from 'sonner';
 import {
   LogIn,
@@ -22,7 +19,8 @@ import {
   Lock,
   Mail,
   User,
-  Phone
+  Phone,
+  ShieldCheck
 } from 'lucide-react';
 
 interface AuthModalProps {
@@ -32,8 +30,6 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const dispatch = useAppDispatch();
-  const groups = useAppSelector((state) => state.groups.groups);
-  const contacts = useAppSelector((state) => state.contacts.contacts);
 
   const [authMethod, setAuthMethod] = useState<'phone' | 'email' | 'google'>('phone');
   const [emailTab, setEmailTab] = useState<'signin' | 'signup'>('signin');
@@ -42,61 +38,41 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   // Phone login form state
   const [phoneName, setPhoneName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [pin, setPin] = useState('');
 
   // Email form state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Handle Phone-based login
-  const handlePhoneLogin = (e: React.FormEvent) => {
+  // Handle Phone + 4-digit PIN login
+  const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanPhone = phoneNumber.trim();
-    if (!cleanPhone || cleanPhone.replace(/\D/g, '').length < 10) {
-      toast.error('Please enter a valid 10-digit phone number');
+    if (!phoneNumber.trim()) {
+      toast.error('Please enter your phone number');
+      return;
+    }
+    if (!pin.trim() || pin.trim().length !== 4) {
+      toast.error('Please enter your 4-digit PIN (e.g. 1234)');
       return;
     }
 
-    // 1. Check if this phone number matches an existing member in any group
-    let matchedMemberId: string | null = null;
-    let matchedName: string | null = null;
-
-    for (const g of groups) {
-      const found = g.members.find((m) => isSamePhone(m.phone, cleanPhone));
-      if (found) {
-        matchedMemberId = found.id;
-        matchedName = found.name.replace(' (You)', '');
-        break;
-      }
+    setIsLoading(true);
+    try {
+      const userProfile = await loginOrRegisterWithPhoneAndPin(
+        phoneNumber,
+        pin,
+        phoneName
+      );
+      dispatch(setUser(userProfile));
+      dispatch(setDemoMode(false));
+      toast.success(`Welcome back, ${userProfile.name}!`);
+      onClose();
+    } catch (err: any) {
+      toast.error(err.message || 'Login failed. Please verify your phone and PIN.');
+    } finally {
+      setIsLoading(false);
     }
-
-    // 2. Or check contacts
-    if (!matchedName) {
-      const foundContact = contacts.find((c) => isSamePhone(c.phone, cleanPhone));
-      if (foundContact) {
-        matchedName = foundContact.name;
-        matchedMemberId = foundContact.id;
-      }
-    }
-
-    const finalName = phoneName.trim() || matchedName || `User ${cleanPhone.slice(-4)}`;
-    const finalId = matchedMemberId || `usr_${normalizePhone(cleanPhone)}`;
-
-    const userProfile: UserProfile = {
-      id: finalId,
-      name: finalName,
-      phone: cleanPhone,
-      email: `${normalizePhone(cleanPhone)}@splitwise.local`,
-      defaultCurrency: 'INR',
-      createdAt: new Date().toISOString()
-    };
-
-    dispatch(setUser(userProfile));
-    dispatch(setDemoMode(false));
-    saveUserProfileToFirestore(userProfile).catch(() => {});
-
-    toast.success(`Logged in as ${finalName}!`);
-    onClose();
   };
 
   const handleGoogleLogin = async () => {
@@ -173,7 +149,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title="Sign In to Splitwise"
-      description="Log in with your phone number or email to sync your expenses."
+      description="Quick sign in with your phone number & 4-digit PIN."
     >
       <div className="space-y-4 pt-1">
         {/* Method Switcher Tabs */}
@@ -188,7 +164,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             }`}
           >
             <Phone className="h-3.5 w-3.5" />
-            Phone No.
+            Phone & PIN
           </button>
           <button
             type="button"
@@ -215,7 +191,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </button>
         </div>
 
-        {/* 1. Phone Login */}
+        {/* 1. Phone + PIN Login */}
         {authMethod === 'phone' && (
           <form onSubmit={handlePhoneLogin} className="space-y-3 pt-1">
             <div>
@@ -233,19 +209,40 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
+                4-Digit PIN <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="password"
+                maxLength={4}
+                placeholder="•••• (e.g. 1234)"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                leftIcon={<Lock className="h-4 w-4" />}
+              />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Enter any 4-digit PIN for quick, secure login.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Your Name <span className="text-slate-400 font-normal">(optional if already registered)</span>
               </label>
               <Input
-                placeholder="e.g. John Doe"
+                placeholder="e.g. Priya Sharma"
                 value={phoneName}
                 onChange={(e) => setPhoneName(e.target.value)}
                 leftIcon={<User className="h-4 w-4" />}
               />
             </div>
 
-            <Button type="submit" className="w-full h-11 text-sm font-semibold mt-2">
+            <Button
+              type="submit"
+              isLoading={isLoading}
+              className="w-full h-11 text-sm font-semibold mt-2"
+            >
               <LogIn className="h-4 w-4 mr-2" />
-              Log In with Phone Number
+              Log In with Phone & PIN
             </Button>
           </form>
         )}

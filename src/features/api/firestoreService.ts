@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -25,6 +26,60 @@ export async function saveUserProfileToFirestore(user: UserProfile): Promise<voi
   } catch (error) {
     console.error('Error saving user profile to Firestore:', error);
   }
+}
+
+/**
+ * Get user profile from Firestore `/users/{uid}`
+ */
+export async function getUserProfileFromFirestore(userId: string): Promise<UserProfile | null> {
+  if (!isFirebaseConfigured || !db || !userId) return null;
+  try {
+    const userRef = doc(db, 'users', userId);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) {
+      return snap.data() as UserProfile;
+    }
+  } catch (error) {
+    console.warn('Error reading user profile from Firestore:', error);
+  }
+  return null;
+}
+
+/**
+ * Fetch a single group by its inviteCode from Firestore
+ */
+export async function fetchGroupByCode(inviteCode: string): Promise<Group | null> {
+  if (!isFirebaseConfigured || !db || !inviteCode) return null;
+  try {
+    const q = query(
+      collection(db, 'groups'),
+      where('inviteCode', '==', inviteCode.trim().toUpperCase())
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      return snap.docs[0].data() as Group;
+    }
+  } catch (error) {
+    console.warn('Error fetching group by code:', error);
+  }
+  return null;
+}
+
+/**
+ * Fetch a single group by ID from Firestore
+ */
+export async function fetchGroupById(groupId: string): Promise<Group | null> {
+  if (!isFirebaseConfigured || !db || !groupId) return null;
+  try {
+    const docRef = doc(db, 'groups', groupId);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      return snap.data() as Group;
+    }
+  } catch (error) {
+    console.warn('Error fetching group by id:', error);
+  }
+  return null;
 }
 
 /**
