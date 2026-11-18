@@ -158,7 +158,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         onClose();
       }
     } catch (error: any) {
-      toast.error(error.message || 'Google sign in failed.');
+      if (
+        error?.code === 'auth/unauthorized-domain' ||
+        error?.message?.includes('unauthorized-domain')
+      ) {
+        const domain = window.location.hostname;
+        toast.error(
+          `Domain "${domain}" is not authorized! In Firebase Console > Authentication > Settings > Authorized domains, add "${domain}".`,
+          { duration: 10000 }
+        );
+      } else {
+        toast.error(error.message || 'Google sign in failed.');
+      }
     } finally {
       setIsLoading(false);
     }
