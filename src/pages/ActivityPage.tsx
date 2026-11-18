@@ -101,75 +101,78 @@ export function ActivityPage() {
   activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
-    <div className="min-h-screen pb-24 max-w-lg mx-auto px-4 pt-4 sm:pt-6">
-      <div className="pb-4">
-        <h1 className="text-xl font-bold text-slate-900">Recent Activity</h1>
-        <p className="text-xs text-slate-500 mt-0.5">
+    <div className="min-h-screen pb-24 max-w-lg mx-auto">
+      {/* Fixed Sticky Header */}
+      <header className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md px-4 py-3 border-b border-slate-200/70 shadow-2xs">
+        <h1 className="text-base font-bold text-slate-900 leading-tight">Recent Activity</h1>
+        <p className="text-[11px] text-slate-500 mt-0.5">
           History of all shared expenses and settlements
         </p>
-      </div>
+      </header>
 
-      {activities.length === 0 ? (
-        <Card className="p-8 text-center border-dashed">
-          <Clock className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-          <p className="text-sm font-semibold text-slate-800">No activity yet</p>
-          <p className="text-xs text-slate-500 mt-1">
-            Expenses and payments will show up here as they happen.
-          </p>
-        </Card>
-      ) : (
-        <div className="space-y-2.5">
-          {activities.map((item) => (
-            <Card key={item.id} className="p-3.5 border-slate-200/80">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div
-                    className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                      item.type === 'settlement'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}
-                  >
-                    {item.type === 'settlement' ? (
-                      <CheckCircle2 className="h-5 w-5" />
-                    ) : (
-                      <Receipt className="h-5 w-5" />
-                    )}
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      <span className="font-medium text-slate-700">{item.groupName}</span>{' '}
-                      • {formatDate(item.date)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0 pl-2">
-                  <p className="text-sm font-bold text-slate-900">
-                    {formatCurrency(item.amount, item.currency)}
-                  </p>
-                  {item.userImpact && (
-                    <p
-                      className={`text-[11px] font-semibold ${
-                        item.userImpact.isPositive
-                          ? 'text-emerald-600'
-                          : 'text-red-600'
+      <div className="px-4 pt-4">
+        {activities.length === 0 ? (
+          <Card className="p-8 text-center border-dashed">
+            <Clock className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-slate-800">No activity yet</p>
+            <p className="text-xs text-slate-500 mt-1">
+              Expenses and payments will show up here as they happen.
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-2.5">
+            {activities.map((item) => (
+              <Card key={item.id} className="p-3.5 border-slate-200/80">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                        item.type === 'settlement'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-blue-100 text-blue-700'
                       }`}
                     >
-                      {item.userImpact.text}{' '}
-                      {formatCurrency(item.userImpact.amount, item.currency)}
+                      {item.type === 'settlement' ? (
+                        <CheckCircle2 className="h-5 w-5" />
+                      ) : (
+                        <Receipt className="h-5 w-5" />
+                      )}
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">
+                        {item.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        <span className="font-medium text-slate-700">{item.groupName}</span>{' '}
+                        • {formatDate(item.date)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 pl-2">
+                    <p className="text-sm font-bold text-slate-900">
+                      {formatCurrency(item.amount, item.currency)}
                     </p>
-                  )}
+                    {item.userImpact && (
+                      <p
+                        className={`text-[11px] font-semibold ${
+                          item.userImpact.isPositive
+                            ? 'text-emerald-600'
+                            : 'text-red-600'
+                        }`}
+                      >
+                        {item.userImpact.text}{' '}
+                        {formatCurrency(item.userImpact.amount, item.currency)}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

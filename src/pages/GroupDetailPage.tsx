@@ -92,218 +92,224 @@ export function GroupDetailPage() {
   };
 
   return (
-    <div className="min-h-screen pb-24 max-w-lg mx-auto px-4 pt-4 sm:pt-6">
-      {/* Navigation Top Bar */}
-      <div className="flex items-center justify-between pb-3">
-        <button
-          onClick={() => navigate('/')}
-          className="rounded-full p-2 text-slate-600 hover:bg-slate-100 transition-colors"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsInviteOpen(true)}
-            className="rounded-full text-slate-600"
-            title="Invite friends"
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsAddMemberOpen(true)}
-            className="rounded-full text-slate-600"
-            title="Add Member"
-          >
-            <UserPlus className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleDeleteGroup}
-            className="rounded-full text-red-500 hover:bg-red-50"
-            title="Delete Group"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Group Title and Info */}
-      <div className="pb-4">
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold text-slate-900">{group.name}</h1>
-          <span
-            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${categoryMeta.color}`}
-          >
-            {categoryMeta.label}
-          </span>
-        </div>
-        {group.description && (
-          <p className="text-xs text-slate-500 mt-1">{group.description}</p>
-        )}
-      </div>
-
-      {/* User Balance In This Group Banner */}
-      <Card className="bg-slate-900 text-white p-4 mb-4 border-none shadow-sm relative overflow-hidden">
-        <div className="flex items-center justify-between relative z-10">
-          <div>
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-              Your Group Balance
-            </p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-2xl font-extrabold tracking-tight">
-                {userBalance >= 0 ? '+' : '-'}
-                {formatCurrency(Math.abs(userBalance), group.currency)}
-              </span>
-              <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  Math.abs(userBalance) < 0.01
-                    ? 'bg-slate-800 text-slate-300'
-                    : userBalance > 0
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'bg-red-500/20 text-red-400'
-                }`}
-              >
-                {Math.abs(userBalance) < 0.01
-                  ? 'Settled up'
-                  : userBalance > 0
-                  ? 'You are owed'
-                  : 'You owe'}
-              </span>
-            </div>
-          </div>
-
-          <div className="text-right">
-            <span className="text-[11px] text-slate-400 block">Total Spent</span>
-            <span className="text-sm font-bold text-slate-200">
-              {formatCurrency(balanceCalculation.totalGroupExpenses, group.currency)}
-            </span>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-800 relative z-10">
-          <Button
-            onClick={() => setIsExpenseOpen(true)}
-            className="h-10 text-xs font-semibold gap-1.5 bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4" />
-            Add Expense
-          </Button>
-
-          <Button
-            onClick={() => setIsSettleOpen(true)}
-            variant="outline"
-            className="h-10 text-xs font-semibold gap-1.5 border-slate-700 bg-slate-800/80 text-white hover:bg-slate-700"
-          >
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            Settle Up
-          </Button>
-        </div>
-      </Card>
-
-      {/* Tabs: Expenses | Balances | Members */}
-      <Tabs
-        tabs={[
-          { id: 'expenses', label: 'Expenses', count: groupExpenses.length },
-          { id: 'balances', label: 'Balances' },
-          { id: 'members', label: 'Members', count: group.members.length }
-        ]}
-        activeTab={activeTab}
-        onChange={(id) => setActiveTab(id as any)}
-        className="mb-4"
-      />
-
-      {/* Tab 1: Expenses List */}
-      {activeTab === 'expenses' && (
-        <div className="space-y-3">
-          {filteredExpenses.length === 0 ? (
-            <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-                <Receipt className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-800">No expenses yet</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Add dinner, rent, tickets, or travel costs to split with the group.
-                </p>
-              </div>
-              <Button size="sm" onClick={() => setIsExpenseOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Add First Expense
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {filteredExpenses.map((expense) => (
-                <ExpenseCard key={expense.id} expense={expense} group={group} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Tab 2: Balances & Simplified Debts */}
-      {activeTab === 'balances' && (
-        <div className="space-y-4">
-          <DebtSimplificationCard
-            group={group}
-            debts={balanceCalculation.simplifiedDebts}
-          />
-          <BalancesSummary group={group} balanceCalculation={balanceCalculation} />
-        </div>
-      )}
-
-      {/* Tab 3: Group Members */}
-      {activeTab === 'members' && (
-        <Card className="border-slate-200/80">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              Group Members ({group.members.length})
-            </h4>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAddMemberOpen(true)}
-              className="text-xs h-8 px-2.5"
+    <div className="min-h-screen pb-24 max-w-lg mx-auto">
+      {/* Fixed Sticky Navigation Top Bar */}
+      <header className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md px-4 py-2.5 border-b border-slate-200/70 shadow-2xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5 flex-1 min-w-0 pr-2">
+            <button
+              onClick={() => navigate('/')}
+              className="rounded-full p-1.5 -ml-1 text-slate-600 hover:bg-slate-200/70 transition-colors shrink-0"
+              aria-label="Back"
             >
-              <UserPlus className="h-3.5 w-3.5 mr-1" /> Add Member
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-sm font-bold text-slate-900 truncate">{group.name}</h1>
+                <span
+                  className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full shrink-0 ${categoryMeta.color}`}
+                >
+                  {categoryMeta.label}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400">
+                {group.members.length} {group.members.length === 1 ? 'member' : 'members'} • Code: {group.inviteCode}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsInviteOpen(true)}
+              className="h-8 w-8 rounded-full text-slate-600 hover:bg-slate-200/60"
+              title="Invite friends"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsAddMemberOpen(true)}
+              className="h-8 w-8 rounded-full text-slate-600 hover:bg-slate-200/60"
+              title="Add Member"
+            >
+              <UserPlus className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDeleteGroup}
+              className="h-8 w-8 rounded-full text-red-500 hover:bg-red-50"
+              title="Delete Group"
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+      </header>
 
-          <div className="divide-y divide-slate-100 pt-1">
-            {group.members.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between py-3 first:pt-2 last:pb-1"
-              >
-                <div className="flex items-center space-x-3">
-                  <Avatar name={member.name} size="md" />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{member.name}</p>
-                    {member.email && (
-                      <p className="text-xs text-slate-500">{member.email}</p>
-                    )}
-                  </div>
-                </div>
+      <div className="px-4 pt-4">
+        {group.description && (
+          <p className="text-xs text-slate-500 mb-3 -mt-1">{group.description}</p>
+        )}
 
-                {member.id === group.createdBy && (
-                  <Badge variant="outline" className="text-[10px]">
-                    Creator
-                  </Badge>
-                )}
+        {/* User Balance In This Group Banner */}
+        <Card className="bg-slate-900 text-white p-4 mb-4 border-none shadow-sm relative overflow-hidden">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+                Your Group Balance
+              </p>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <span className="text-2xl font-extrabold tracking-tight">
+                  {userBalance >= 0 ? '+' : '-'}
+                  {formatCurrency(Math.abs(userBalance), group.currency)}
+                </span>
+                <span
+                  className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    Math.abs(userBalance) < 0.01
+                      ? 'bg-slate-800 text-slate-300'
+                      : userBalance > 0
+                      ? 'bg-emerald-500/20 text-emerald-400'
+                      : 'bg-red-500/20 text-red-400'
+                  }`}
+                >
+                  {Math.abs(userBalance) < 0.01
+                    ? 'Settled up'
+                    : userBalance > 0
+                    ? 'You are owed'
+                    : 'You owe'}
+                </span>
               </div>
-            ))}
+            </div>
+
+            <div className="text-right">
+              <span className="text-[11px] text-slate-400 block">Total Spent</span>
+              <span className="text-sm font-bold text-slate-200">
+                {formatCurrency(balanceCalculation.totalGroupExpenses, group.currency)}
+              </span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-800 relative z-10">
+            <Button
+              onClick={() => setIsExpenseOpen(true)}
+              className="h-10 text-xs font-semibold gap-1.5 bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4" />
+              Add Expense
+            </Button>
+
+            <Button
+              onClick={() => setIsSettleOpen(true)}
+              variant="outline"
+              className="h-10 text-xs font-semibold gap-1.5 border-slate-700 bg-slate-800/80 text-white hover:bg-slate-700"
+            >
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              Settle Up
+            </Button>
           </div>
         </Card>
-      )}
+
+        {/* Tabs: Expenses | Balances | Members */}
+        <Tabs
+          tabs={[
+            { id: 'expenses', label: 'Expenses', count: groupExpenses.length },
+            { id: 'balances', label: 'Balances' },
+            { id: 'members', label: 'Members', count: group.members.length }
+          ]}
+          activeTab={activeTab}
+          onChange={(id) => setActiveTab(id as any)}
+          className="mb-4"
+        />
+
+        {/* Tab 1: Expenses List */}
+        {activeTab === 'expenses' && (
+          <div className="space-y-3">
+            {filteredExpenses.length === 0 ? (
+              <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                  <Receipt className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">No expenses yet</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Add dinner, rent, tickets, or travel costs to split with the group.
+                  </p>
+                </div>
+                <Button size="sm" onClick={() => setIsExpenseOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Add First Expense
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {filteredExpenses.map((expense) => (
+                  <ExpenseCard key={expense.id} expense={expense} group={group} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 2: Balances & Simplified Debts */}
+        {activeTab === 'balances' && (
+          <div className="space-y-4">
+            <DebtSimplificationCard
+              group={group}
+              debts={balanceCalculation.simplifiedDebts}
+            />
+            <BalancesSummary group={group} balanceCalculation={balanceCalculation} />
+          </div>
+        )}
+
+        {/* Tab 3: Group Members */}
+        {activeTab === 'members' && (
+          <Card className="border-slate-200/80">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                Group Members ({group.members.length})
+              </h4>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsAddMemberOpen(true)}
+                className="text-xs h-8 px-2.5"
+              >
+                <UserPlus className="h-3.5 w-3.5 mr-1" /> Add Member
+              </Button>
+            </div>
+
+            <div className="divide-y divide-slate-100 pt-1">
+              {group.members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between py-3 first:pt-2 last:pb-1"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Avatar name={member.name} size="md" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{member.name}</p>
+                      {member.email && (
+                        <p className="text-xs text-slate-500">{member.email}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {member.id === group.createdBy && (
+                    <Badge variant="outline" className="text-[10px]">
+                      Creator
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
 
       {/* Modals */}
       <AddExpenseModal

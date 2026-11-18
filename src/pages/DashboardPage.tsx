@@ -77,169 +77,173 @@ export function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen pb-24 max-w-lg mx-auto px-4 pt-4 sm:pt-6">
-      {/* Top Header */}
-      <header className="flex items-center justify-between pb-4">
-        <div className="flex items-center space-x-3">
-          <Avatar name={currentUser?.name || 'User'} size="lg" />
-          <div>
-            <p className="text-xs font-medium text-slate-500">Welcome back,</p>
-            <h1 className="text-lg font-bold text-slate-900 leading-tight">
-              {currentUser?.name || 'User'}
-            </h1>
+    <div className="min-h-screen pb-24 max-w-lg mx-auto">
+      {/* Fixed Sticky Header */}
+      <header className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md px-4 py-3 border-b border-slate-200/70 shadow-2xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Avatar name={currentUser?.name || 'User'} size="md" />
+            <div>
+              <p className="text-[11px] font-medium text-slate-500 leading-none">Welcome back,</p>
+              <h1 className="text-base font-bold text-slate-900 leading-tight mt-0.5">
+                {currentUser?.name || 'User'}
+              </h1>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsJoinOpen(true)}
-            className="text-xs h-9 px-3 gap-1.5 rounded-xl border-slate-200"
-          >
-            <QrCode className="h-4 w-4 text-slate-500" />
-            <span>Join</span>
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setIsCreateOpen(true)}
-            className="text-xs h-9 px-3 gap-1.5 rounded-xl"
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Group</span>
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsJoinOpen(true)}
+              className="text-xs h-8 px-2.5 gap-1.5 rounded-xl border-slate-200 bg-white"
+            >
+              <QrCode className="h-3.5 w-3.5 text-slate-500" />
+              <span>Join</span>
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setIsCreateOpen(true)}
+              className="text-xs h-8 px-2.5 gap-1.5 rounded-xl"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>New Group</span>
+            </Button>
+          </div>
         </div>
       </header>
 
-      {/* Overall Total Balance Card */}
-      <Card className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 border-none shadow-md shadow-slate-900/10 mb-5 relative overflow-hidden">
-        <div className="relative z-10">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-            Overall Net Balance
-          </p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <h2 className="text-3xl font-extrabold tracking-tight">
-              {netBalance >= 0 ? '+' : '-'}
-              {formatCurrency(Math.abs(netBalance), currency)}
-            </h2>
-            <span
-              className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                Math.abs(netBalance) < 0.01
-                  ? 'bg-slate-700 text-slate-300'
-                  : netBalance > 0
-                  ? 'bg-emerald-500/20 text-emerald-400'
-                  : 'bg-red-500/20 text-red-400'
-              }`}
-            >
-              {Math.abs(netBalance) < 0.01
-                ? 'All settled up'
-                : netBalance > 0
-                ? 'You are owed in total'
-                : 'You owe in total'}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mt-5 pt-4 border-t border-slate-700/60">
-            <div className="flex items-center space-x-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                <TrendingUp className="h-4 w-4 stroke-[2.5]" />
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider">
-                  You are owed
-                </p>
-                <p className="text-sm font-bold text-emerald-400">
-                  +{formatCurrency(totalOwedToUser, currency)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2.5">
-              <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 shrink-0">
-                <TrendingDown className="h-4 w-4 stroke-[2.5]" />
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider">
-                  You owe
-                </p>
-                <p className="text-sm font-bold text-red-400">
-                  -{formatCurrency(totalUserOwes, currency)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Subtle decorative glow */}
-        <div className="absolute -right-8 -top-8 w-36 h-36 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-      </Card>
-
-      {/* Search & Categories */}
-      <div className="space-y-2.5 mb-4">
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search groups or members..."
-          leftIcon={<Search className="h-4 w-4" />}
-          className="bg-white border-slate-200"
-        />
-
-        {/* Category Pills */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          {categories.map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all select-none ${
-                  isSelected
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+      <div className="px-4 pt-4">
+        {/* Overall Total Balance Card */}
+        <Card className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 border-none shadow-md shadow-slate-900/10 mb-5 relative overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+              Overall Net Balance
+            </p>
+            <div className="flex items-baseline gap-2 mt-1">
+              <h2 className="text-3xl font-extrabold tracking-tight">
+                {netBalance >= 0 ? '+' : '-'}
+                {formatCurrency(Math.abs(netBalance), currency)}
+              </h2>
+              <span
+                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  Math.abs(netBalance) < 0.01
+                    ? 'bg-slate-700 text-slate-300'
+                    : netBalance > 0
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-red-500/20 text-red-400'
                 }`}
               >
-                {cat.label}
-              </button>
-            );
-          })}
+                {Math.abs(netBalance) < 0.01
+                  ? 'All settled up'
+                  : netBalance > 0
+                  ? 'You are owed in total'
+                  : 'You owe in total'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-5 pt-4 border-t border-slate-700/60">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                  <TrendingUp className="h-4 w-4 stroke-[2.5]" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">
+                    You are owed
+                  </p>
+                  <p className="text-sm font-bold text-emerald-400">
+                    +{formatCurrency(totalOwedToUser, currency)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 shrink-0">
+                  <TrendingDown className="h-4 w-4 stroke-[2.5]" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">
+                    You owe
+                  </p>
+                  <p className="text-sm font-bold text-red-400">
+                    -{formatCurrency(totalUserOwes, currency)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Subtle decorative glow */}
+          <div className="absolute -right-8 -top-8 w-36 h-36 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+        </Card>
+
+        {/* Search & Categories */}
+        <div className="space-y-2.5 mb-4">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search groups or members..."
+            leftIcon={<Search className="h-4 w-4" />}
+            className="bg-white border-slate-200"
+          />
+
+          {/* Category Pills */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            {categories.map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all select-none ${
+                    isSelected
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Groups List Section */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wider">
+              Your Expense Groups ({filteredGroups.length})
+            </h2>
+          </div>
+
+          {filteredGroups.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">No groups found</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {search
+                    ? 'Try searching with another keyword.'
+                    : 'Create a group or join with an invite code to start splitting.'}
+                </p>
+              </div>
+              <div className="pt-2 flex justify-center gap-2">
+                <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Create Group
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredGroups.map((group) => (
+                <GroupCard key={group.id} group={group} />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
-
-      {/* Groups List Section */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wider">
-            Your Expense Groups ({filteredGroups.length})
-          </h2>
-        </div>
-
-        {filteredGroups.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-              <Users className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-800">No groups found</p>
-              <p className="text-xs text-slate-500 mt-1">
-                {search
-                  ? 'Try searching with another keyword.'
-                  : 'Create a group or join with an invite code to start splitting.'}
-              </p>
-            </div>
-            <div className="pt-2 flex justify-center gap-2">
-              <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Create Group
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredGroups.map((group) => (
-              <GroupCard key={group.id} group={group} />
-            ))}
-          </div>
-        )}
-      </section>
 
       {/* Modals */}
       <CreateGroupModal
